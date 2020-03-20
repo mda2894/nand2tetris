@@ -61,34 +61,5 @@ class Assembler:
             for line in self.out:
                 f.write(line + "\n")
 
-def test():
-    file = "max/Max.asm"
-
-    parser = p.Parser(file)
-    parser.file
-
-    parser.readFile()
-    parser.lines
-
-    [parser.type(line) for line in parser.lines]
-    [parser.symb(line) for line in parser.lines]
-    dests = [parser.dest(line) for line in parser.lines]
-    dests
-    jumps = [parser.jump(line) for line in parser.lines]
-    jumps
-    comps = [parser.comp(line) for line in parser.lines]
-    comps
-
-    code = c.Code()
-
-    [code.dest(dest) for dest in dests]
-    [code.jump(jump) for jump in jumps]
-    [code.comp(comp) for comp in comps]
-
-    asm = Assembler(file)
-    asm.pass1()
-    asm.pass2()
-    asm.out
-
 if __name__ == '__main__':
     main(sys.argv[1])
