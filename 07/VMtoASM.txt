@@ -1,0 +1,194 @@
+add:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# SP--
+  @SP
+  M=M-1
+# *SP = *SP + D
+  A=M
+  M=D+M
+# SP++
+  @SP
+  M=M+1
+
+sub:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# SP--
+  @SP
+  M=M-1
+# *SP = *SP - D
+  A=M
+  M=M-D
+# SP++
+  @SP
+  M=M+1
+
+and:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# SP--
+  @SP
+  M=M-1
+# *SP = *SP & D
+  A=M
+  M=D&M
+# SP++
+  @SP
+  M=M+1
+
+or:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# SP--
+  @SP
+  M=M-1
+# *SP = *SP | D
+  A=M
+  M=D|M
+# SP++
+  @SP
+  M=M+1
+
+neg:
+# SP--
+  @SP
+  M=M-1
+# *SP = -*SP
+  A=M
+  M=-M
+# SP++
+  @SP
+  M=M+1
+
+not:
+# SP--
+  @SP
+  M=M-1
+# *SP = !*SP
+  A=M
+  M=!M
+# SP++
+  @SP
+  M=M+1
+
+eq:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# SP--
+  @SP
+  M=M-1
+# D = *SP - D
+  A=M
+  D=M-D
+# if D == 0 goto JUMP
+  @JUMP
+  D;JEQ
+# *SP = FALSE
+  @SP
+  A=M
+  M=0
+# goto EXIT
+  @EXIT
+  0;JMP
+# (JUMP)
+  (JUMP)
+# *SP = TRUE
+  @SP
+  A=M
+  M=-1
+# (EXIT)
+  (EXIT)
+# SP++
+  @SP
+  M=M+1
+
+gt:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# SP--
+  @SP
+  M=M-1
+# D = *SP - D
+  A=M
+  D=M-D
+# if D > 0 goto JUMP
+  @JUMP
+  D;JGT
+# *SP = FALSE
+  @SP
+  A=M
+  M=0
+# goto EXIT
+  @EXIT
+  0;JMP
+# (JUMP)
+  (JUMP)
+# *SP = TRUE
+  @SP
+  A=M
+  M=-1
+# (EXIT)
+  (EXIT)
+# SP++
+  @SP
+  M=M+1
+
+lt:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# SP--
+  @SP
+  M=M-1
+# D = *SP - D
+  A=M
+  D=M-D
+# if D < 0 goto JUMP
+  @JUMP
+  D;JLT
+# *SP = FALSE
+  @SP
+  A=M
+  M=0
+# goto EXIT
+  @EXIT
+  0;JMP
+# (JUMP)
+  (JUMP)
+# *SP = TRUE
+  @SP
+  A=M
+  M=-1
+# (EXIT)
+  (EXIT)
+# SP++
+  @SP
+  M=M+1
