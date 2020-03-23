@@ -1,13 +1,38 @@
-import Parser as p, Code as c
+import Parser as p, CodeWriter as cw, os, sys
 
-file = "StackArithmetic\StackTest\StackTest.vm"
+def main(dir):
+    vmt = VMTranslator(dir)
+    vmt.translate()
 
-parser = p.Parser(file)
+class VMTranslator:
 
-parser.readFile()
+    def __init__(self, dir):
+        self.dir = dir
+        self.code = cw.CodeWriter()
 
-parser.lines
+    def translate(self):
+        for file in [f for f in os.listdir(self.dir) if f.endswith('.vm')]:
+            file = os.path.join(self.dir, file)
+            parser = p.Parser(file)
+            parser.readFile()
 
-[parser.type(line) for line in parser.lines]
-[parser.arg1(line) for line in parser.lines]
-[parser.arg2(line) for line in parser.lines]
+            for line in parser.lines:
+                type = parser.type(line)
+                arg1 = parser.arg1(line)
+                arg2 = parser.arg2(line)
+                self.code.writeComment(line)
+                if type == "ARITHMETIC":
+                    self.code.writeArithmetic(arg1)
+                else:
+                    self.code.writePush(arg1, arg2)
+
+        self.writeFile()
+
+    def writeFile(self):
+        outfile = self.dir + "\\" + self.dir.split("\\")[-1] + ".asm"
+        with open(outfile, "w") as f:
+            for line in self.code.out:
+                f.write(line + "\n")
+
+if __name__ == '__main__':
+    main(sys.argv[1])

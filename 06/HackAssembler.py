@@ -1,10 +1,13 @@
 import Parser as p, Code as c, SymbolTable as s, sys
 
 def main(file):
-    asm = Assembler(file)
+    asm = HackAssembler(file)
     asm.assemble()
 
-class Assembler:
+if __name__ == '__main__':
+    main(sys.argv[1])
+
+class HackAssembler:
 
     def __init__(self, file):
         self.file = file
@@ -60,6 +63,3 @@ class Assembler:
         with open(outfile, "w") as f:
             for line in self.out:
                 f.write(line + "\n")
-
-if __name__ == '__main__':
-    main(sys.argv[1])
