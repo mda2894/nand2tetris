@@ -203,3 +203,80 @@ push constant x:
 # SP++
   @SP
   M=M+1
+
+push local/arg/this/that i:
+  @i
+  D=A
+  @LCL # change
+  A=D+M
+  D=M
+# *SP = D
+  @SP
+  A=M
+  M=D
+# SP++
+  @SP
+  M=M+1
+
+pop local/arg/this/that i:
+# D = LCL[i]
+  @i
+  D=A
+  @LCL # change
+  D=D+M
+# D = LCL[i] + *SP--
+  @SP
+  A=M-1
+  D=D+M
+# *LCL[i] = *SP--
+  A=D-M
+  M=D-A
+# SP--
+  @SP
+  M=M-1
+
+push pointer/temp i:
+# D = TMP[i]
+  @(3|5)+i
+  D=M
+# *SP = D
+  @SP
+  A=M
+  M=D
+# SP++
+  @SP
+  M=M+1
+
+pop pointer/temp i:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# TMP[i] = D
+  @(3|5)+i
+  M=D
+
+push static i:
+# D = static.i
+  @static.i
+  D=M
+# *SP = D
+  @SP
+  A=M
+  M=D
+# SP++
+  @SP
+  M=M+1
+
+pop static i:
+# SP--
+  @SP
+  M=M-1
+# D = *SP
+  A=M
+  D=M
+# static.i = D
+  @static.i
+  M=D

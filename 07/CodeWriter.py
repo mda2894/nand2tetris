@@ -14,6 +14,12 @@ class CodeWriter:
             "gt"  : "D;JGT",
             "lt"  : "D;JLT"
         }
+        self.segmentTable = {
+            "local"    : "LCL",
+            "argument" : "ARG",
+            "this"     : "THIS",
+            "that"     : "THAT"
+        }
         self.twoArgCalcList = [
             "@SP",
             "M=M-1",
@@ -67,6 +73,65 @@ class CodeWriter:
             "@SP",
             "M=M+1"
         ]
+        self.pushLclArgThisThatList = [
+            "@ind",
+            "D=A",
+            "@seg",
+            "A=D+M",
+            "D=M",
+            "@SP",
+            "A=M",
+            "M=D",
+            "@SP",
+            "M=M+1"
+        ]
+        self.popLclArgThisThatList = [
+            "@ind",
+            "D=A",
+            "@seg",
+            "D=D+M",
+            "@SP",
+            "A=M-1",
+            "D=D+M",
+            "A=D-M",
+            "M=D-A",
+            "@SP",
+            "M=M-1"
+        ]
+        self.pushPointerTempList = [
+            "@address",
+            "D=M",
+            "@SP",
+            "A=M",
+            "M=D",
+            "@SP",
+            "M=M+1"
+        ]
+        self.popPointerTempList = [
+            "@SP",
+            "M=M-1",
+            "A=M",
+            "D=M",
+            "@address",
+            "M=D"
+        ]
+        self.pushStaticList = [
+            "@static",
+            "D=M",
+            "@SP",
+            "A=M",
+            "M=D",
+            "@SP",
+            "M=M+1"
+        ]
+        self.popStaticList = [
+            "@SP",
+            "M=M-1",
+            "A=M",
+            "D=M",
+            "@static",
+            "M=D"
+        ]
 
     def writeArithmetic(self, arg):
         if arg in ["add", "sub", "and", "or"]:
@@ -76,9 +141,23 @@ class CodeWriter:
         else:
             self.writeComparison(arg)
 
-    def writePush(self, arg1, arg2):
+    def writePush(self, arg1, arg2, file):
         if arg1 == "constant":
             self.writePushConstant(arg2)
+        elif arg1 in ["local", "argument", "this", "that"]:
+            self.writePushLclArgThisThat(arg1, arg2)
+        elif arg1 in ["pointer", "temp"]:
+            self.writePushPointerTemp(arg1, arg2)
+        else:
+            self.writePushStatic(arg2, file)
+
+    def writePop(self, arg1, arg2, file):
+        if arg1 in ["local", "argument", "this", "that"]:
+            self.writePopLclArgThisThat(arg1, arg2)
+        elif arg1 in ["pointer", "temp"]:
+            self.writePopPointerTemp(arg1, arg2)
+        else:
+            self.writePopStatic(arg2, file)
 
     def writeComment(self, comment):
         self.out.append("// " + comment)
@@ -107,4 +186,44 @@ class CodeWriter:
     def writePushConstant(self, num):
         asm = ["@"+num if x == "num" else x for x in self.pushConstantList]
         asm = "\n".join(asm)
+        self.out.append(asm)
+
+    def writePushLclArgThisThat(self, seg, ind):
+        asm = "\n".join(self.pushLclArgThisThatList)
+        asm = asm.replace("ind", ind)
+        asm = asm.replace("seg", self.segmentTable.get(seg))
+        self.out.append(asm)
+
+    def writePopLclArgThisThat(self, seg, ind):
+        asm = "\n".join(self.popLclArgThisThatList)
+        asm = asm.replace("ind", ind)
+        asm = asm.replace("seg", self.segmentTable.get(seg))
+        self.out.append(asm)
+
+    def writePushPointerTemp(self, seg, ind):
+        if seg == "pointer":
+            address = str(3 + int(ind))
+        else:
+            address = str(5 + int(ind))
+        asm = "\n".join(self.pushPointerTempList)
+        asm = asm.replace("address", address)
+        self.out.append(asm)
+
+    def writePopPointerTemp(self, seg, ind):
+        if seg == "pointer":
+            address = str(3 + int(ind))
+        else:
+            address = str(5 + int(ind))
+        asm = "\n".join(self.popPointerTempList)
+        asm = asm.replace("address", address)
+        self.out.append(asm)
+
+    def writePushStatic(self, varnum, file):
+        asm = "\n".join(self.pushStaticList)
+        asm = asm.replace("static", file + "." + varnum)
+        self.out.append(asm)
+
+    def writePopStatic(self, varnum, file):
+        asm = "\n".join(self.popStaticList)
+        asm = asm.replace("static", file + "." + varnum)
         self.out.append(asm)

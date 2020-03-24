@@ -12,9 +12,10 @@ class VMTranslator:
 
     def translate(self):
         for file in [f for f in os.listdir(self.dir) if f.endswith('.vm')]:
-            file = os.path.join(self.dir, file)
-            parser = p.Parser(file)
+            filepath = os.path.join(self.dir, file)
+            parser = p.Parser(filepath)
             parser.readFile()
+            filestub = file.replace(".vm", "")
 
             for line in parser.lines:
                 type = parser.type(line)
@@ -23,8 +24,10 @@ class VMTranslator:
                 self.code.writeComment(line)
                 if type == "ARITHMETIC":
                     self.code.writeArithmetic(arg1)
-                else:
-                    self.code.writePush(arg1, arg2)
+                elif type == "PUSH":
+                    self.code.writePush(arg1, arg2, filestub)
+                elif type == "POP":
+                    self.code.writePop(arg1, arg2, filestub)
 
         self.writeFile()
 
