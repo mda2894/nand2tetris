@@ -7,7 +7,7 @@ class Parser:
             "pop" : "POP",
             "label" : "LABEL",
             "goto" : "GOTO",
-            "if-goto" : "IF",
+            "if-goto" : "IFGOTO",
             "function" : "FUNCTION",
             "call" : "CALL",
             "return" : "RETURN"
@@ -16,7 +16,6 @@ class Parser:
     def readFile(self):
         with open(self.file) as f:
             self.lines = f.read().splitlines()
-
         self.lines = [line.split("//", 1)[0].strip() for line in self.lines]
         self.lines = [line for line in self.lines if line]
 
