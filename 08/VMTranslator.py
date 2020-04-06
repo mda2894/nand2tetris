@@ -13,16 +13,25 @@ class VMTranslator:
     def translate(self):
         self.isFile = os.path.isfile(self.path)
         if self.isFile:
-            self.file = self.path
-            self.translateFile()
+            self.translateFile(self.path)
+            self.writeFile()
         else:
-            self.dir = self.path
-            self.translateDir()
+            self.translateDir(self.path)
+            self.writeFile()
 
-    def translateFile(self):
-        parser = p.Parser(self.file)
+    def translateDir(self, dir):
+        self.code.writeInit()
+
+        fileList = [f for f in os.listdir(dir) if f.endswith('.vm')]
+
+        for file in fileList:
+            filePath = os.path.join(dir, file)
+            self.translateFile(filePath)
+
+    def translateFile(self, file):
+        parser = p.Parser(file)
         parser.readFile()
-        fileStub = self.file.replace(".vm", "")
+        fileStub = os.path.split(file)[1].replace(".vm", "")
 
         for line in parser.lines:
             type = parser.type(line)
@@ -49,52 +58,12 @@ class VMTranslator:
             elif type == "RETURN":
                 self.code.writeReturn()
 
-        self.writeFile()
-
-    def translateDir(self):
-        self.code.writeInit()
-
-        fileList = [f for f in os.listdir(self.dir) if f.endswith('.vm')]
-
-        for file in fileList:
-            filePath = os.path.join(self.dir, file)
-            parser = p.Parser(filePath)
-            parser.readFile()
-            fileStub = file.replace(".vm", "")
-
-            for line in parser.lines:
-                type = parser.type(line)
-                arg1 = parser.arg1(line)
-                arg2 = parser.arg2(line)
-                self.code.writeComment(line)
-
-                if type == "ARITHMETIC":
-                    self.code.writeArithmetic(arg1)
-                elif type == "PUSH":
-                    self.code.writePush(arg1, arg2, fileStub)
-                elif type == "POP":
-                    self.code.writePop(arg1, arg2, fileStub)
-                elif type == "LABEL":
-                    self.code.writeLabel(arg1)
-                elif type == "GOTO":
-                    self.code.writeGoto(arg1)
-                elif type == "IFGOTO":
-                    self.code.writeIfGoto(arg1)
-                elif type == "FUNCTION":
-                    self.code.writeFunction(arg1, arg2)
-                elif type == "CALL":
-                    self.code.writeCall(arg1, arg2)
-                elif type == "RETURN":
-                    self.code.writeReturn()
-
-        self.writeFile()
-
     def writeFile(self):
         if self.isFile:
-            outfile = self.file.replace(".vm", ".asm")
+            outfile = self.path.replace(".vm", ".asm")
         else:
-            outfile = os.path.split(self.dir)[1] + ".asm"
-            outfile = os.path.join(self.dir, outfile)
+            outfile = os.path.split(self.path)[1] + ".asm"
+            outfile = os.path.join(self.path, outfile)
         with open(outfile, "w") as f:
             for line in self.code.out:
                 f.write(line + "\n")

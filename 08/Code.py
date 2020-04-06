@@ -22,9 +22,7 @@ class Code:
             "@256",
             "D=A",
             "@SP",
-            "M=D",
-            "@Sys.init",
-            "0;JMP"
+            "M=D"
         ]
         self.twoArgCalc = [
             "@SP",
@@ -145,4 +143,75 @@ class Code:
             "D=M",
             "@label",
             "D;JNE"
+        ]
+        self.callPush = [
+            "@address",
+            "D=M/A",
+            "@SP",
+            "A=M",
+            "M=D",
+            "@SP",
+            "M=M+1"
+        ]
+        self.callEnd = [
+            "@SP",
+            "D=M",
+            "@5",
+            "D=D-A",
+            "@nArgs",
+            "D=D-A",
+            "@ARG",
+            "M=D",
+            "@SP",
+            "D=M",
+            "@LCL",
+            "M=D",
+            "@func",
+            "0;JMP",
+            "(returnAddress)"
+        ]
+        self.Return = [
+            "@LCL",
+            "D=M",
+            "@endFrame",
+            "M=D",
+            "@5",
+            "D=D-A",
+            "A=D",
+            "D=M",
+            "@retAddr",
+            "M=D",
+            "@SP",
+            "A=M-1",
+            "D=M",
+            "@ARG",
+            "A=M",
+            "M=D",
+            "@ARG",
+            "D=M+1",
+            "@SP",
+            "M=D",
+            "@endFrame",
+            "AM=M-1",
+            "D=M",
+            "@THAT",
+            "M=D",
+            "@endFrame",
+            "AM=M-1",
+            "D=M",
+            "@THIS",
+            "M=D",
+            "@endFrame",
+            "AM=M-1",
+            "D=M",
+            "@ARG",
+            "M=D",
+            "@endFrame",
+            "AM=M-1",
+            "D=M",
+            "@LCL",
+            "M=D",
+            "@retAddr",
+            "A=M",
+            "0;JMP"
         ]
