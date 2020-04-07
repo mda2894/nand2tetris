@@ -1,0 +1,55 @@
+function Stats.init 0
+call Float.init 0
+pop temp 0
+push constant 0
+return
+function Stats.sum 2
+push constant 0
+pop local 0
+push constant 0
+pop local 1
+label WHILE_EXP0
+push local 1
+push argument 1
+lt
+not
+if-goto WHILE_END0
+push local 0
+push local 1
+push argument 0
+add
+pop pointer 1
+push that 0
+add
+pop local 0
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+return
+function Stats.mean 3
+push argument 0
+push argument 1
+call Stats.sum 2
+pop local 2
+call Float.new 0
+pop local 0
+call Float.new 0
+pop local 1
+push local 1
+push argument 1
+call Float.setInt 2
+pop temp 0
+push local 0
+push local 2
+call Float.setInt 2
+pop temp 0
+push local 0
+push local 1
+call Float.div 2
+pop temp 0
+push local 0
+return
