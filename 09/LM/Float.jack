@@ -1,0 +1,1519 @@
+// Copyright 2012 Mark Armbrust.  Permission granted
+// for educational use.
+
+/**
+ *	Type Float -- floating point arithmetic.
+ *
+ *	This class implements floating point arithmetic with 32 bit signed
+ *	mantissa and 16 bit exponent.  This gives about 9.3 decimal digit
+ *	precision.
+ *
+ *	The exponent is artificially limited to 10 bits which limits the
+ *	base-10 exponents to about +-150.  (This limits the size of tables
+ *	of constants required for FP to string conversion.)
+ *
+ *	Representable numbers:
+ *		[-1.34078079(2)e+154, -7.45834073(1)e-155],
+ *		0,
+ *		[ 7.45834073(1)e-155,  1.34078079(2)e+154]
+ *
+ *	Public interface:
+ *
+ *	Initialization
+ *		function void init()
+ *
+ *	Constructor / destructor / assignment
+ *		constructor Float new()
+ *		constructor Float newFloat(Float f)
+ *		method void dispose()
+ *		method Float set(Float f)
+ *		method Float setInt(int i)
+ *
+ *	Constants
+ *		function int maxExp()
+ *		function int minExp()
+ *		function Float posInf()
+ *		function Float negInf()
+ *
+ *	Arithmetic
+ *		method Float neg()
+ *		method Float add(Float f)
+ *		method Float addInt(int i)
+ *		method Float sub(Float f)
+ *		method Float subInt(int i)
+ *		method Float mult(Float f)
+ *		method Float multInt(int i)
+ *		method Float div(Float f)
+ *		method Float divInt(int i)
+ *		method Float sqrt()
+ *
+ *	Tests
+ *		method int compare(Float f) 
+ *		method int compareInt(int i) 
+ *		method bool isZero() 
+ *		method bool isNeg() 
+ *		method bool isPos() 
+ *
+ *	I/O
+ *		method void print(int n)
+ *		method String toString(int n)
+ *		method Float setString(String s)
+ *
+ *
+ *	Example usage:
+ *
+ *		var Float f;
+ *		var Float g;
+ *		let f = Float.new();
+ *		let g = Float.new();
+ *
+ *		do f.setInt(355);
+ *		do g.setInt(113);
+ *		do f.div(g);
+ * 		do f.print(6);		// Prints 3.14159e+000
+ *
+ *		do f.dispose();
+ *		do g.dispose();
+ */
+
+
+class Float {
+
+	field int msw;
+	field int lsw;
+	field int exp;
+
+	static int MSB;				// 0x8000
+	static int MAX_EXP;			// maximum binary exponent
+	static int MIN_EXP;			// minimum binary exponent
+	static Float ZERO;			// floating point 0.0
+	static Float INF;			// maximum positive floating point value
+	static Float NEG_INF;		// maximum negative floating point value
+	static Float quotient;		// used in div
+	static Float afTemp;		// used in add, (sub), mul, div, _floor
+	static Float cfTemp;		// used in compare
+	static Float xfTemp;		// used in sqrt
+	static Float gfTemp;		// used in sqrt
+	static Float amTemp;		// used in _mant_add/sub
+	static Float xmTempH;		// used in _mant_longUmult
+	static Float xmTempL;		// used in _mant_longUmult
+	static int shrMaskH;		// used in SHR and SRA
+	static int shrMaskL;
+
+	// Constants and variables for I/O routines
+	static String infinity;		// "inf."
+	static Float LOG10_2;
+	static int MAX_POW10;		// size of power10 and newPower10 arrays
+	static Float power10;		// power constants for _setPow10
+	static Float negPower10;
+	static Float rounding;		// rounding values for Nth decimal place
+	static Float atempf;		// used in _floor
+	static Float place;			// used in toFloat
+	static Float value;			// used in toFloat
+
+
+	/**
+	 *	Initialize the Float class.
+	 *
+	 *	You must call this before calling Float.new().
+	 *
+	 *		do Float.init();
+	 *
+	 *	There is no return value.
+	 */
+
+	function void init()
+	{
+		var int i;	// = 0
+		var int x;
+
+		let MSB = (-32767)-1;		// 0x8000
+		let MAX_EXP = 511;			// !!! MAX+MAX+1 must not overflow !!!
+		let MIN_EXP = -512;			// !!! MIN+MIN-1 must not overflow !!!
+		let ZERO = Float._newConst(0, 0, MIN_EXP);
+		let INF = Float._newConst(32767, -1, MAX_EXP);		// 0x7FFF FFFF 03FF
+		let NEG_INF = Float._newConst(MSB, 1, MAX_EXP);		// 0x8000 0001 03FF
+		let quotient = Float.new();
+		let afTemp = Float.new();
+		let cfTemp = Float.new();
+		let xfTemp = Float.new();
+		let gfTemp = Float.new();
+		let amTemp = Float.new();
+		let xmTempH = Float.new();
+		let xmTempL = Float.new();
+
+        let shrMaskH = Array.new(31);	// Shift mask used by SHR / SRA
+        let shrMaskL = Array.new(31);
+		let x = 1;
+		while (i<16) {					// [0] = 00000001
+			let shrMaskL[i] = x;		// [1] = 00000003
+			let x = x+x+1;				// [2] = 00000007
+			let i = i+1;				// [15]= 0000FFFF
+		}
+		let x = 1;
+		while (i<31) {					// [16]= 0001FFFF
+			let shrMaskL[i] = -1;		// [17]= 0003FFFF
+			let shrMaskH[i] = x;		// [18]= 0007FFFF
+			let x = x+x+1;				// [30]= 7FFFFFFF
+			let i = i+1;
+		}
+
+		do Float._io_init();
+		return;
+	}
+
+	
+	/**
+	 *	Return useful constants associated with Float class.
+	 *
+	 *	function int maxExp()		maximum binary exponent
+	 *	function int minExp()		minimum binary exponent
+	 *	function Float posInf()		maximum positive floating point value
+	 *	function Float negInf()		maximum negative floating point value
+	 * 
+	 *	WARNING:  Returned Float values are global variables the must
+	 *	be copied using Float.set(), not assigned with =.
+	 */
+	 
+	function int maxExp() {
+		return MAX_EXP;
+	}
+	function int minExp() {
+		return MIN_EXP;
+	}
+	function Float posInf() {
+		return INF;
+	}
+	function Float negInf() {
+		return NEG_INF;
+	}
+
+
+	/**
+	 *	Construct a new Float with value 0.
+	 *
+	 *		let new_Float = Float.new();
+	 *
+	 *	Returns this.
+	 */
+
+	constructor Float new()
+	{
+		let msw = 0;
+		let lsw = 0;
+		let exp = MIN_EXP;
+		return this;
+	}
+
+
+	/**
+	 *	Construct a new Float from a Float.
+	 *
+	 *		let new_Float = Float.newFloat(a_Float);
+	 *
+	 *	Returns this.
+	 */
+
+	constructor Float newFloat(Float f)
+	{
+		do set(f);
+		return this;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Construct a new Float with a constant value.
+	 *
+	 *	DOES NOT CALL _normalize!
+	 *
+	 *	Returns this.
+	 */
+
+	constructor Float _newConst(int manth, int mantl, int e)
+	{
+		do _setConst(manth, mantl, e);
+		return this;
+	}
+
+
+	/**
+	 *	Deallocate this Float.
+	 *
+	 *		do f.dispose();
+	 *
+	 *	No return value;
+	 */
+
+	method void dispose()
+	{
+		do Memory.deAlloc(this);
+		return;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Return the MSW of the mantissa from this Float.
+	 */
+
+	method int _msw()
+	{
+		return msw;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Return the LSW of the mantissa from this Float.
+	 */
+
+	method int _lsw()
+	{
+		return lsw;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Return the exponent from this Float.
+	 */
+
+	method int _exp()
+	{
+		return exp;
+	}
+
+
+	/**
+	 *	Set this Float from another Float.
+	 *
+	 *		do f.set(a_Float);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float set(Float f)
+	{
+		return _setConst(f._msw(), f._lsw(), f._exp());
+	}
+
+
+	/**
+	 *	Set this Float from an int.
+	 *
+	 *		do f.setInt(an_int);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float setInt(int i)
+	{
+		do _setConst(i<0, i, 30);
+		return _normalize();
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Set this Float to a constant value.
+	 *
+	 *	DOES NOT CALL _normalize!
+	 *
+	 *	Returns this.
+	 */
+
+	method Float _setConst(int manth, int mantl, int e)
+	{
+		let msw = manth;
+		let lsw = mantl;
+		let exp = e;
+		return this;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Normalize this Float.
+	 *
+	 *	Normalized form will normally have the top two bits different.
+	 *	Exceptions:
+	 *	0 is normalized to 00000000,MIN_EXP.
+	 *	mantissa = 80000000.  The mantissa range must be symetrical. It will
+	 *	`	be stored as C0000000 with the appropriate exponent.
+	 *
+	 *	Returns this.
+	 */
+
+	method Float _normalize()
+	{
+		if ((msw = -16384) & (lsw = 0)) {
+			// C0000000 is normalized and will get mangled if exp = MIN_EXP
+			return this;
+		}
+
+		if (isZero()) {
+			let exp = MIN_EXP; }
+
+		else {
+			while ((isNeg() & _mant_bit30()) |
+				   ((~isNeg()) & ~_mant_bit30())) {
+				if (~(exp>MIN_EXP)) {
+					do set(ZERO);			// underflow to 0
+					return this;
+				}
+				else {
+					do _mant_SHL1();
+					let exp = exp-1;
+				}
+			}
+			if (_mant_isMaxNeg()) {
+				if (exp=MAX_EXP) {
+					do set(NEG_INF); }		// overflow to neg. infinity
+				else {
+					do _setConst(-16384, 0, exp+1); }	// 0xC000 0000 ++exp
+			}
+		}
+
+		if (exp < MIN_EXP) {
+			do set(ZERO); }
+		else {
+			if (exp > MAX_EXP) {
+				if (isNeg()) {
+					do set(NEG_INF); }
+				else {
+					do set(INF); }
+			}
+		}
+
+		return this;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Denormalize this Float to have the given exponent.
+	 *
+	 *	If the given exponent is less than the current exponent, does
+	 *	nothing and returns 0.  Note that the mantissa may underflow
+	 *	to 0 or -1 depending on argument sign.
+	 *
+	 *	Returns the next least significant bit of the denormalized
+	 *	number.
+	 */
+
+	method int _denormalize(int e)
+	{
+		var int round;	// = 0
+
+		if (e > exp) {
+			let round = _mant_SRA(e-exp);
+			let exp = e;
+		}
+		return round;
+	}
+
+
+	/**
+	 *	Negate this Float.
+	 *
+	 *		do f.neg();
+	 *
+	 *	Returns this.
+	 */
+
+	method Float neg()
+	{
+        let msw = ~msw;
+        let lsw = (~lsw)+1;
+        if (lsw = 0) {			// check for carry from LSW
+            let msw = msw+1; }
+		return this;
+	}
+
+
+	/**
+	 *	Add a Float to this Float.
+	 *
+	 *		do f.add(a_Float);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float add(Float f)
+	{
+		var int sign;
+		var int round;
+
+		let round = _denormalize(f._exp());
+		do afTemp.set(f);
+		let round = round | afTemp._denormalize(exp);
+
+		let sign = isNeg();
+		if (sign = f.isNeg()) {
+			// Same sign; need to check for overflow after add.
+			do _mant_add(afTemp);
+			do _mant_addInt(round);
+			if (~(sign = isNeg())) {
+				// Right shift and restore the sign.
+				do _mant_SHR1();
+				if (sign) {
+					let msw = msw|MSB; }
+				if (exp = MAX_EXP) {
+					// overflow; set to +/- infinity
+					if (sign) {
+						do set(NEG_INF); }
+					else {
+						do set(INF); }
+				}
+				else {
+					let exp = exp+1; }
+			}
+		}
+		else {
+			do _mant_add(afTemp); 
+			do _mant_addInt(round);		// can't cause overflow
+			}
+
+		return _normalize();
+	}
+
+
+	/**
+	 *	Add an int to this Float.
+	 *
+	 *		do f.addInt(an_int);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float addInt(int i)
+	{
+		do afTemp.setInt(i);
+		return add(afTemp);
+	}
+		
+		
+	/**
+	 *	Subtract a Float from this Float.
+	 *
+	 *		do f.sub(a_Float);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float sub(Float f)
+	{
+		do neg();
+		do add(f);
+		return neg();
+	}	
+	
+	
+	/**
+	 *	Subtract an int from this Float.
+	 *
+	 *		do f.subInt(an_int);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float subInt(int i)
+	{
+		do afTemp.setInt(i);
+		return sub(afTemp);
+	}	
+	
+	
+    /**
+     *  Compare this Float to a Float.
+     *
+     *      do f.compare(a_Float);
+     *
+     *  Returns -1 if this < a_Float, 0 if =, 1 if >.
+     */
+
+    method int compare(Float f) 
+    {
+        do cfTemp.set(this);
+        do cfTemp.sub(f);
+		if (cfTemp.isZero()) {
+			return 0; }
+		if (cfTemp.isNeg()) {
+			return -1; }
+		return 1;
+    }
+
+
+    /**
+     *  Compare this Float to an int.
+     *
+     *      do f.compareInt(an_int);
+     *
+     *  Returns -1 if this < an_int, 0 if =, 1 if >.
+     */
+
+    method int compareInt(int f) 
+    {
+        do cfTemp.set(this);
+        do cfTemp.subInt(f);
+		if (cfTemp.isZero()) {
+			return 0; }
+		if (cfTemp.isNeg()) {
+			return -1; }
+		return 1;
+    }
+
+		
+	/**
+     *  Return true if this Float = 0.
+	 *
+	 *		if(f.isZero()) {
+     */
+
+    method bool isZero() 
+    {
+        return (msw=0) & (lsw=0);
+    }
+
+
+    /**
+     *  Return true if this Float < 0.
+	 *
+	 *		if(f.isNeg()) {
+     */
+
+    method bool isNeg() 
+    {
+        return msw<0;
+    }
+
+    /**
+     *  Return true if this Float > 0.
+	 *
+	 *		if(f.isPos()) {
+     */
+
+    method bool isPos() 
+    {
+        return (~isZero()) & (~isNeg());
+    }
+
+
+	/**
+	 *	Multiply this Float by a Float.
+	 *
+	 *		do f.mult(a_Float);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float mult(Float f)
+	{
+		var bool sign;	// = false
+
+		do afTemp.set(f);
+		if (isNeg()) {
+			let sign = true;
+			do neg();
+		}
+		if (afTemp.isNeg()) {
+			let sign = ~sign;
+			do afTemp.neg();
+		}
+
+		let exp = exp+afTemp._exp()+1;
+		do _mant_longUmult(afTemp);
+		// high bits in this (msw,lsw), low bits in afTemp (msw,lsw)
+
+		do _mant_SHL1();
+		do _mant_addInt(afTemp._mant_SHL1());
+
+		if (~(_mant_bit30())) {
+			// Need to shift left one more time and adjust exponent by -1
+			do _mant_SHL1();
+			do _mant_addInt(afTemp._mant_SHL1());
+			let exp = exp-1;
+		}
+
+		// Round the upper DWORD
+		if (afTemp.isNeg()) {
+			do _mant_addInt(1);
+			if (isNeg()) {
+				// rounding caused overflow -- rescale it
+				do _setConst(16384, 0, exp+1);
+			}
+		}
+
+		if (sign) {
+			do neg(); }
+
+		return _normalize();
+	}
+
+
+	/**
+	 *	Multiply this Float by an int.
+	 *
+	 *		do f.multInt(an_int);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float multInt(int i)
+	{
+		do afTemp.setInt(i);
+		return mult(afTemp);
+	}
+
+	
+	/**
+	 *	Divide this Float by a Float.
+	 *
+	 *		do f.div(a_Float);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float div(Float f)
+	{
+		var bool sign;	// = false
+		var int i;		// = 0
+
+		if (f.isZero()) {
+			do Sys.error(3); }		// divide by zero
+
+		do afTemp.set(f);
+		if (isNeg()) {
+			let sign = true;
+			do neg();
+		}
+		if (afTemp.isNeg()) {
+			let sign = ~sign;
+			do afTemp.neg();
+		}
+
+		if (_mant_ucompare(afTemp) < 0) {
+			do _mant_SHL1();
+			let exp = exp-1;		// OK if this underflows
+		}
+
+		do quotient._mant_setInt(0);
+		while (i<31) {
+			do quotient._mant_SHL1();
+			if (~(_mant_ucompare(afTemp) < 0)) {
+				do _mant_sub(afTemp);
+				do quotient._mant_addInt(1);
+			}
+			do _mant_SHL1();
+			let i = i+1;
+		}
+
+		// Round if next quotient bit will be 1.
+		if (~(_mant_ucompare(afTemp) < 0)) {
+			do quotient._mant_addInt(1); 
+			if (quotient.isNeg()) {
+				// rounding caused overflow -- rescale it
+				do _setConst(16384, 0, exp+1);
+			}
+		}
+
+		do _setConst(quotient._msw(), quotient._lsw(), exp-afTemp._exp());
+
+		if (sign) {
+			do neg(); }
+
+		return _normalize();
+	}
+
+
+	/**
+	 *	Divide this Float by an int.
+	 *
+	 *		do f.divInt(anInt);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float divInt(int i)
+	{
+		do afTemp.setInt(i);
+		return div(afTemp);
+	}
+
+
+	/**
+	 *	Compute square root of this Float.
+	 *
+	 *		do f.sqrt();
+	 *
+	 *	Returns this.
+	 */
+
+	method Float sqrt()
+	{
+		var int i;	// = 0
+
+		if (isNeg()) {
+			do Sys.error(4); }		// square root of negative number
+		if (isZero()) {
+			return this; }
+
+		do xfTemp.set(this);
+		let exp = exp/2;			// initial guess
+
+		while (i<6) {
+			do gfTemp.set(xfTemp);
+			do gfTemp.div(this);
+			do gfTemp.add(this);
+			do set(gfTemp);
+			let exp = exp-1;		// quick divide by 2
+		let i = i+1;
+		}
+
+		return this;
+	}
+
+		
+////////////////////////////////////////////////////////////////////////////////
+//
+//	All of the following _mant_* routines operate only on the mantissa
+//	of the floating point number.
+//
+//	It is imperative the they do not change the exponent.
+    
+	
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Set this mantissa to another mantissa.
+	 *
+	 *	Returns this.
+	 */
+
+	method Float _mant_set(Float f)
+	{
+		let msw = f._msw();
+		let lsw = f._lsw();
+		return this;
+	}
+
+	
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Set this mantissa to an int value.
+	 *
+	 *	Returns this.
+	 */
+
+	method Float _mant_setInt(int i)
+	{
+		let msw = (i<0);
+		let lsw = i;
+		return this;
+	}
+
+	
+	/*	INTERNAL ROUTINE
+	 *
+     *  Return true if mantissa is the maximum negative number.
+     */
+
+    method bool _mant_isMaxNeg() 
+    {
+        return (msw=MSB) & (lsw=0);
+    }
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Test if mantissa bit 30 is set.
+	 */
+
+	method bool _mant_bit30()
+	{
+		return (msw & 16384) = 16384;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Shift the mantissa left 1 bit.
+	 *
+	 *	Returns the shifted out bit (0 or 1).
+	 */
+
+    method int _mant_SHL1() 
+    {
+		var int bit;
+		let bit = (msw<0)&1;
+        let msw = msw+msw;
+        if (lsw < 0) {
+            let msw = msw+1; }
+        let lsw = lsw+lsw;
+        return bit;
+    }
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Logical Shift the mantissa right N bits.  N >= 0.
+	 *
+	 *	No return value.
+	 */
+
+/*	UNUSED
+
+    method void _mant_SHR(int n) 
+    {
+		if (~(n>0)) {
+			return; }
+		if (n>31) {
+			do _mant_setInt(0); 
+			return;
+		}
+
+		// Clear the N LSB bits; they will become the MSBs after the rotate.
+
+		let msw = msw&~shrMaskH[n-1];
+		let lsw = lsw&~shrMaskL[n-1];
+
+		do _mant_ROL(32-n);
+		return;
+	}
+*/
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Logical Shift the mantissa right 1 bit.
+	 *
+	 *	No return value.
+	 */
+
+
+    method void _mant_SHR1() 
+    {
+		let lsw = lsw&~1;	// Clear the LSB; it will become the MSB after the rotate.
+		do _mant_ROL(31);
+		return;
+	}
+
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Arithmetic Shift the mantissa right N bits.
+	 *
+	 *	Returns the last bit shifted out.
+	 */
+
+    method int _mant_SRA(int n) 
+    {
+		var int maskH;
+		var int maskL;
+		var int ret;	// = 0
+
+		if (~(n>0)) {
+			return 0; }
+		if (n>31) {
+			if (isNeg()) {
+				do _mant_setInt(-1); }
+			else {
+				do _mant_setInt(0); }
+			return (msw & 1);
+		}
+
+		// Get last bit to be shifted out.
+
+		if (n<17) {
+			if (n=1) {
+				let ret = lsw & 1; }
+			else {
+				let ret = lsw & (shrMaskL[n-2]+1); }
+		} else {
+			if (n=17) {
+				let ret = msw & 1; }
+			else {
+				let ret = msw & (shrMaskH[n-2]+1); }
+		}
+		if (ret) {
+			let ret = 1; }
+
+		// Copy sign to the N LSB bits; they will become the MSBs after the rotate.
+
+		let maskH = shrMaskH[n-1];
+		let maskL = shrMaskL[n-1];
+		if (msw<0) {
+			let msw = msw|maskH;
+			let lsw = lsw|maskL;
+		}
+		else {
+			let msw = msw&~maskH;
+			let lsw = lsw&~maskL;
+		}
+
+		do _mant_ROL(32-n);
+		return ret;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Rotate the mantissa right N bits.  0 <= N <= 31.
+	 *
+	 *	No return value.
+	 */
+
+    method void _mant_ROL(int n) 
+    {
+		var int t;
+		var int msb;
+
+		if ((~(n>0)) | (n>31)) {
+			return; }
+
+		if (n>15) {
+			let t = msw;
+			let msw = lsw;
+			let lsw = t;
+			let n = n-16;
+		}
+
+		while (n>0) {
+			let msb = (msw < 0) & 1;	// ROL 1 bit
+			let msw = msw+msw;
+			if (lsw < 0) {
+				let msw = msw+1; }
+			let lsw = lsw+lsw+msb;
+
+			let n = n-1;
+		}
+
+		return;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+     *  Add a mantissa to this mantissa.
+     *
+     *  Returns carry out bit (0 or 1).
+     */
+
+    method int _mant_add(Float d) 
+    {
+		var int carry;
+		let carry = Float._addWillCarry(msw, d._msw());
+        let msw = msw + d._msw();
+        if (Float._addWillCarry(lsw, d._lsw())) {
+            let msw = msw+1; 
+			let carry = carry | (msw=0);
+		}
+        let lsw = lsw + d._lsw();
+        return carry & 1;
+    }
+
+
+	/*	INTERNAL ROUTINE
+	 *
+     *  Add an int to this mantissa.
+     *
+     *      do d.AddInt(an_int);
+     *
+     *  Returns carry out bit (0 or 1).
+     */
+
+    method int _mant_addInt(int i) 
+    {
+		do amTemp._mant_setInt(i);
+		return _mant_add(amTemp);
+    }
+ 
+
+	/*	INTERNAL ROUTINE
+	 *
+     *  Subtract a mantissa from this mantissa.
+     *
+     *      do d.sub(a_Float);
+     *
+     *  No return value.
+     */
+
+    method void _mant_sub(Float d) 
+    {
+		do amTemp._mant_set(d);
+		do _mant_add(amTemp.neg());
+		return;
+    }
+
+
+	/*	INTERNAL ROUTINE
+	 *
+     *	Return true if (unsigned)a + (unsigned)b will generate a carry.
+	 */
+
+    function boolean _addWillCarry(int a, int b) 
+    {
+        if (a & b & MSB) {
+            return true; }      // generate carry
+
+        if ((~a) & (~b) & MSB) {
+            return false; }     // can't propagate carry
+
+        return ((a & 32767)+(b & 32767)) < 0;
+    }
+
+
+	/*	INTERNAL ROUTINE
+	 *
+     *  UNSIGNED Compare this mantissa to another mantissa.
+     *
+     *      do d.ucompare(a_Float);
+     *
+     *  Returns -1 if this < a_Float, 0 if =, 1 if >.
+     */
+
+    method Float _mant_ucompare(Float d) 
+    {
+        var int ret;	// = 0
+		
+		if(msw = d._msw()) {
+			if (Float._subWillBorrow(lsw, d._lsw())) {
+				let ret = -1; }
+			else {
+				if (~(lsw = d._lsw())) {
+					let ret = 1; }
+			}
+		}
+		else {
+			if (Float._subWillBorrow(msw, d._msw())) {
+				let ret = -1; }
+			else {
+				let ret = 1; }
+		}
+        return ret;
+    }
+
+
+	/*	INTERNAL ROUTINE
+	 *
+     *	Return true if (unsigned)a - (unsigned)b will generate a borrow.
+	 */
+
+    function boolean _subWillBorrow(int a, int b)
+    {
+        if ((a&MSB) = (b&MSB)) {
+            return (b>a); }
+        return (b<0);        
+    }
+
+
+	/*	INTERNAL ROUTINE
+	 *
+     *  UNSIGNED 31-bit Multiply this mantissa by another mantissa.
+     *
+     *      d.longUmult(a_Float);
+     *
+     *  this Float is set to the upper 30 bits of the result,
+     *  a_Float is set to the lower 32 bits.
+     */
+
+    method void _mant_longUmult(Float m) 
+    {
+        var int i;		// = 0
+		var int carry;
+
+		do xmTempH._mant_setInt(0);
+		do xmTempL._mant_setInt(0);
+		while (i<31) {
+			let carry = xmTempL._mant_SHL1();
+			do xmTempH._mant_SHL1();
+			do xmTempH._mant_addInt(carry);
+			if (msw & 16384) {
+				// unsigned add m to xmTempH,L
+				let carry = xmTempL._mant_add(m);
+				do xmTempH._mant_addInt(carry);
+			}
+			do _mant_SHL1();
+			let i = i+1;
+		}
+
+		do _mant_set(xmTempH);
+		do m._mant_set(xmTempL);
+		return;
+    }
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//	Floating Point I/O routines.
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Initialize the FloatIO class.
+	 *
+	 *	This is automatically called the first time Float.toString() or 
+	 *	Float.fromString() is called.
+	 */
+
+	function void _io_init()
+	{
+		let atempf = Float.new();
+		let place = Float.new();
+		let value = Float.new();
+
+		let LOG10_2 = Float._newConst(19728, 19778, -2);		// log10(2) = 0.30103
+
+		let MAX_POW10 = 8;
+		let power10 = Array.new(MAX_POW10);
+		let power10[0] = Float._newConst(20480, 0, 3);			// 10^(2^i)
+		let power10[1] = Float._newConst(25600, 0, 6);
+		let power10[2] = Float._newConst(20000, 0, 13);
+		let power10[3] = Float._newConst(24414, 4096, 26);
+		let power10[4] = Float._newConst(18189, -6944, 53);
+		let power10[5] = Float._newConst(20194, -10539, 106);
+		let power10[6] = Float._newConst(24892, 4004, 212);
+		let power10[7] = Float._newConst(18909, 9188, 425);
+//		let power10[8] = Float._newConst(21823, 30205, 850);	// for 11-bit mantissa
+
+		let negPower10 = Array.new(MAX_POW10);
+		let negPower10[0] = Float._newConst(26214, 26214, -4);	// 0.1^(2^i)
+		let negPower10[1] = Float._newConst(20971, -31457, -7);
+		let negPower10[2] = Float._newConst(26843, -29779, -14);
+		let negPower10[3] = Float._newConst(21990, 15240, -27);
+		let negPower10[4] = Float._newConst(29514, -13728, -54);
+		let negPower10[5] = Float._newConst(26584, -28841, -107);
+		let negPower10[6] = Float._newConst(21567, -2796, -213);
+		let negPower10[7] = Float._newConst(28392, 9022, -426);
+//		let negPower10[8] = Float._newConst(24600, -24173, -851);
+		
+		let rounding = Array.new(10);
+		let rounding[0] = Float._newConst(16384, 0, -1);		// 0.5 * 10^-i
+		let rounding[1] = Float._newConst(26214, 26214, -5);
+		let rounding[2] = Float._newConst(20971, -31457, -8);
+		let rounding[3] = Float._newConst(16777, 14155, -11);
+		let rounding[4] = Float._newConst(26843, -29779, -15);
+		let rounding[5] = Float._newConst(21474, -10716, -18);
+		let rounding[6] = Float._newConst(17179, -8573, -21);
+		let rounding[7] = Float._newConst(27487, -13717, -25);
+		let rounding[8] = Float._newConst(21990, 15240, -28);
+		let rounding[9] = Float._newConst(17592, 12192, -31);
+
+		return;
+	}
+
+
+	/**
+	 *	Print this Float with 'n' mantissa digits.
+	 *
+	 *		do f.print(a_Float);
+	 *
+	 *	No return value.
+	 */
+
+	method void print(int n)
+	{
+		var String s;
+		let s = toString(n);
+		do Output.printString(s);
+		do s.dispose();
+		return;
+	}
+
+
+	/**
+	 *	Convert this Float to a string with 'n' mantissa digits.
+	 *
+	 *	The string format is [-]n.nnnE±xxx
+	 *	The maximum representable number is returned as "+/-inf."
+	 *
+	 *		let new_String = f.toString(n);
+	 *
+	 *	Returns a new string.
+	 */
+
+	method String toString(int n)
+	{
+		var String s;
+		var Float f;
+		var Float x;
+		var int exp10;
+		var int i;		// = 0
+		var int j;
+
+		if (compare(INF)=0) {
+			return "+inf."; }
+		if (compare(NEG_INF)=0) {
+			return "-inf."; }
+
+		let f = Float.newFloat(this);
+		let x = Float.new();
+		let s = String.new(n+10);
+
+		if (f.isNeg()) {
+			do f.neg();
+			do s.appendChar(45);	// '-'
+		}
+
+		if (n<1) { let n = 1; }
+		if (n>10) { let n = 10; }
+		
+		do x.setInt(f._exp());
+		do x.mult(LOG10_2);
+		let exp10 = x._floor();	// may be off by one
+
+		do x._setPow10(-exp10);
+		do f.mult(x);
+
+		// f should be >= 1, < 10. rescaling +/- one decade may be needed
+
+		if (~(f.compareInt(10) < 0)) {
+			do f.mult(negPower10[0]);
+			let exp10 = exp10+1;
+		}
+		else {
+			if (f.compareInt(1) < 0) {
+				do f.mult(power10[0]);
+				let exp10 = exp10-1;
+			}
+		}
+
+		// Round to the number of displayed digits
+
+		do f.add(rounding[n-1]);		
+		if (~(f.compareInt(10) < 0)) {
+			do f.mult(negPower10[0]);
+			let exp10 = exp10+1;
+		}
+
+		// Convert mantissa
+		
+		while (i<n) {
+			let j = f._floor();
+			do x.setInt(j);
+			do f.sub(x);
+			do s.appendChar(j+48);
+			if (i=0) {
+				do s.appendChar(46); }	// '.'
+			do f.mult(power10[0]);
+			let i = i+1;
+		}
+
+		do s.appendChar(101);		// 'e'
+		if (isZero()) {
+			let exp10 = 0; }
+		if (exp10<0) {
+			let exp10 = -exp10;
+			do s.appendChar(45);	// '-'
+		}
+		else {
+			do s.appendChar(43); }	// '+'
+
+		let j = exp10/100;
+		let exp10 = exp10-(j*100);
+		do s.appendChar(j+48);
+		let j = exp10/10;
+		do s.appendChar(j+48);
+		let j = exp10-(j*10);
+		do s.appendChar(j+48);
+
+		do x.dispose();
+		do f.dispose();
+		return s;
+	}
+
+
+	/**
+	 *	Set this Float from a String.
+	 *
+	 *	The input string format is +-nn.nnnE±nn
+	 *	The signs are optional.  The exponent is optional and can
+	 *	use 'E' or 'e'.
+	 *
+	 *		do f.setString(a_String);
+	 *
+	 *	Returns this.
+	 */
+
+	method Float setString(String str)
+	{
+		var bool ms;				// mantissa sign
+		var bool es;				// exponent sign
+		var int e;					// exponent
+		var int i;		// = 0		// string index
+		var int n;					// string length
+		var char c;					// current character
+		var bool break;	// = false	// early loop exit
+		var bool dp;	// = false	// true after decimal point
+
+		do place.setInt(1);
+		do setInt(0);
+		let n = str.length();
+		if (n>0) {
+			let c = str.charAt(i);
+			while ((i<n) & ~break) {
+				if (c=45) {				// '-'
+					let ms = true;
+				} else {
+					if (c=43) {			// '+'
+						// ignore
+					} else {
+						if (c=46) {		// '.'
+							let dp = true;
+						} else {
+							if ((c|32)=101) {		// 'E' or 'e'
+								let break = true;
+							} else {
+								if ((c>47) & (c<58)) {	// digit
+									if (dp) {
+										do place.divInt(10);
+										do value.setInt(c-48);
+										do value.mult(place);
+										do add(value);
+									} else {
+										do multInt(10);
+										do addInt(c-48);
+									}
+								} else {			// end of number without exponent
+									if (ms) {
+										do neg(); }
+									return this; }
+							}
+						}
+					}
+				}
+				let i = i+1;
+				if (i<n) {
+					let c = str.charAt(i); }
+			}
+			if (ms) {
+				do neg(); }
+
+			let break = false;
+			while ((i<n) & ~break) {
+				if (c=45) {				// '-'
+					let es = true;
+				} else {
+					if (c=43) {			// '+'
+						// ignore
+					} else {
+						if ((c>47) & (c<58)) {	// digit
+							let e = (e*10)+(c-48);
+						} else {			// end of number without exponent
+							let break = true; }
+					}
+				}
+				let i = i+1;
+				if (i<n) {
+					let c = str.charAt(i); }
+			}
+			if (es) {
+				let e = -e; }
+
+			if (e<-160) {
+				let e = -160; }
+			if (e>160) {
+				let e = 160; }
+			do place._setPow10(e);
+			do mult(place);
+		}
+
+		return this;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Set this Float to 10^n.  -255 <= n <= 255
+	 *
+	 *	Returns this.
+	 */
+
+	method Float _setPow10(int n)
+	{
+		var Float pow;
+		var int i;		// = 0
+		var int b;
+
+		if (n<0) {
+			let n = -n;
+			let pow = negPower10;
+		}
+		else {
+			let pow = power10; }
+
+		do setInt(1);
+		let b = 1;
+		while (i < MAX_POW10) {
+			if (n&b) {
+				do mult(pow[i]); }
+			let b = b+b;
+			let i = i+1;
+		}
+
+		return this;
+	}
+
+
+	/*	INTERNAL ROUTINE
+	 *
+	 *	Return the integer floor of this Float.
+	 *
+	 *		!!! NO RANGE CHECKING !!!
+	 */
+
+	method int _floor()
+	{
+		var int ret;
+
+		do atempf.set(this);
+		do atempf._denormalize(30);
+		let ret = atempf._lsw();
+		return ret;
+	}
+
+
+	/*	INTERNAL DEBUGGING ROUTINE
+	 *
+	 *	Hex dump this Float.
+	 *
+	 *	Returns this.
+	 */
+
+	method void _dump()
+	{
+		do Float._dumpInt(msw);
+		do Float._dumpInt(lsw);
+		do Output.printChar(94);		// '^'
+		do Float._dumpInt(exp);
+		do Output.printChar(32);		// ' '
+		return;
+	}
+
+
+	/*	INTERNAL DEBUGGING ROUTINE
+	 *
+	 *	Dump an int in hexadecimal.
+	 */
+
+	function void _dumpInt(int i)
+	{
+		var int c;
+		if (i<0) {
+			let c = 8;
+			let i = i&32767;
+		}
+		let c = c + 48 + ((i/4096) & 15);
+		if (c > 57) { let c=c+7; } do Output.printChar(c);
+		let c = 48 + ((i/256) & 15);
+		if (c > 57) { let c=c+7; } do Output.printChar(c);
+		let c = 48 + ((i/16) & 15);
+		if (c > 57) { let c=c+7; } do Output.printChar(c);
+		let c = 48 + (i & 15);
+		if (c > 57) { let c=c+7; } do Output.printChar(c);
+		return;
+	}
+
+	
+}

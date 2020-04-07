@@ -1,0 +1,42 @@
+class Stats {
+/** Library for handling simple statistical operations */
+
+  function void init() {
+    /** initializes Float class for floating point arithmetic*/
+    do Float.init();
+    return;
+  }
+
+  function int sum(Array arr, int arrLength) {
+    /** calculates the sum of an array */
+    var int sum, i;
+
+    let sum = 0;
+    let i = 0;
+
+    while (i < arrLength) {
+      let sum = sum + arr[i]
+      let i = i + 1;
+    }
+
+    return sum;
+  }
+
+  function Float mean(Array arr, int arrLength) {
+    /** calculates the mean of an array */
+    var Float mean;
+    var Float n;
+    var int sum;
+
+    let sum = Stats.sum(arr, arrLength);
+    let mean = Float.new();
+    let n = Float.new();
+
+    do n.setInt(arrLength);
+    do mean.setInt(sum);
+    do mean.div(n);
+
+    return mean;
+  }
+
+}
