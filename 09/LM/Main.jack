@@ -1,26 +1,18 @@
 class Main {
 
   function void main() {
-    var int sum, i;
-    var Float mean;
-    var Array sample;
+    var Array dat, X, Y;
+    var int n;
 
-    do Stats.init();
+    do Float.init();
 
-    let sample = Array.new(10);
-    let i = 0;
+    let dat = Stats.getData();
 
-    while (i < 10) {
-      let sample[i] = i + 1;
-      let i = i + 1;
-    }
+    let X = dat[0];
+    let Y = dat[1];
+    let n = dat[2];
 
-    let sum = Stats.sum(sample, 10);
-    let mean = Stats.mean(sample, 10);
-
-    do Output.printInt(sum);
-    do Output.println();
-    do mean.print(2);
+    do Stats.lm(X, Y, n);
 
     return;
   }
