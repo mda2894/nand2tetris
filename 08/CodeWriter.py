@@ -6,7 +6,8 @@ class CodeWriter:
         self.out = list()
         self.jumpCount = 0
         self.code = c.Code()
-        self.functionName = ""
+        self.functionName = "bootstrap"
+        self.callCount = 0
 
     def writeComment(self, comment):
         self.out.append("// " + comment)
@@ -14,6 +15,58 @@ class CodeWriter:
     def writeInit(self):
         self.writeComment("Init")
         asm = "\n".join(self.code.init)
+        self.out.append(asm)
+        self.writeCall("Sys.init", "0")
+
+    def writeLabel(self, arg1):
+        asm = "(" + self.functionName + "$" + arg1 + ")"
+        self.out.append(asm)
+
+    def writeGoto(self, arg1):
+        asm = "@" + self.functionName + "$" + arg1 + "\n" + "0;JMP"
+        self.out.append(asm)
+
+    def writeIfGoto(self, arg1):
+        asm = "\n".join(self.code.ifGoto)
+        asm = asm.replace("label", self.functionName + "$" + arg1)
+        self.out.append(asm)
+
+    def writeFunction(self, func, nVars):
+        self.functionName = func
+        self.writeFunctionLabel()
+        for i in range(int(nVars)):
+            self.writePushConstant("0")
+        self.callCount = 0
+
+    def writeFunctionLabel(self):
+        asm = "(" + self.functionName + ")"
+        self.out.append(asm)
+
+    def writeCall(self, func, nArgs):
+        self.callCount += 1
+        returnAddress = self.functionName + "$ret." + str(self.callCount)
+        self.writeCallPush(returnAddress)
+        self.writeCallPush("LCL")
+        self.writeCallPush("ARG")
+        self.writeCallPush("THIS")
+        self.writeCallPush("THAT")
+        asm = "\n".join(self.code.callEnd)
+        asm = asm.replace("func", func)
+        asm = asm.replace("nArgs", nArgs)
+        asm = asm.replace("returnAddress", returnAddress)
+        self.out.append(asm)
+
+    def writeCallPush(self, address):
+        asm = "\n".join(self.code.callPush)
+        asm = asm.replace("address", address)
+        if address in ("LCL", "ARG", "THIS", "THAT"):
+            asm = asm.replace("M/A", "M")
+        else:
+            asm = asm.replace("M/A", "A")
+        self.out.append(asm)
+
+    def writeReturn(self):
+        asm = "\n".join(self.code.Return)
         self.out.append(asm)
 
     def writeArithmetic(self, arg):
@@ -42,6 +95,7 @@ class CodeWriter:
         else:
             self.writePopStatic(arg2, file)
 
+<<<<<<< HEAD
     def writeLabel(self, arg1):
         asm = "(" + self.functionName + "$" + arg1 + ")"
         self.out.append(asm)
@@ -61,6 +115,8 @@ class CodeWriter:
 
     def writeReturn(self):
 
+=======
+>>>>>>> 7aba1ec7d5ce59f4b2c416a99e7f5187b6f52148
     def writeTwoArgCalc(self, arg):
         cmd = self.code.arithmeticTable.get(arg)
         asm = [cmd if x == "cmd" else x for x in self.code.twoArgCalc]

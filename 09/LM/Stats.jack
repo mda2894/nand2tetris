@@ -1,0 +1,134 @@
+class Stats {
+/** Library for handling simple statistical operations */
+
+  function Array arrayMult(Array a, Array b, int arrLength) {
+    /** performs element-wise multiplication of two int arrays of the same size */
+    var Array ab;
+    var int i;
+
+    let ab = Array.new(arrLength);
+    let i = 0;
+
+    while (i < arrLength) {
+      let ab[i] = a[i] * b[i];
+      let i = i + 1;
+    }
+
+    return ab;
+  }
+
+  function int sum(Array arr, int arrLength) {
+    /** calculates the sum of an array */
+    var int sum, i;
+
+    let sum = 0;
+    let i = 0;
+
+    while (i < arrLength) {
+      let sum = sum + arr[i];
+      let i = i + 1;
+    }
+
+    return sum;
+  }
+
+  function Float mean(Array arr, int arrLength) {
+    /** calculates the mean of an array */
+    var Float mean;
+    var int sum;
+
+    let sum = Stats.sum(arr, arrLength);
+
+    let mean = Float.new();
+    do mean.setInt(sum);
+    do mean.divInt(arrLength);
+
+    return mean;
+  }
+
+  function Array getData() {
+    /** asks the user for sample X and Y data */
+    var Array X, Y, result;
+    var int n, i;
+
+    let n = Keyboard.readInt("How many observations do you have? ");
+    do Screen.clearScreen();
+    do Output.moveCursor(0, 0);
+
+    let X = Array.new(n);
+    let Y = Array.new(n);
+    let result = Array.new(3);
+
+    let i = 0;
+
+    while (i < n) {
+      let X[i] = Keyboard.readInt("Enter your X data: ");
+      let i = i + 1;
+    }
+
+    do Screen.clearScreen();
+    do Output.moveCursor(0, 0);
+
+    let i = 0;
+
+    while (i < n) {
+      let Y[i] = Keyboard.readInt("Enter your Y data: ");
+      let i = i + 1;
+    }
+
+    do Screen.clearScreen();
+    do Output.moveCursor(0, 0);
+
+    let result[0] = X;
+    let result[1] = Y;
+    let result[2] = n;
+
+    return result;
+  }
+
+  function Array lm(Array X, Array Y, int n) {
+    /** calculates the regression parameters for Y = b0 + b1*X */
+    var Array XY, X2, result;
+    var Float b0, b1, meanX, meanY, b1meanX;
+    var int sumX, sumY, sumXY, sumX2, sum2X;
+
+    let meanX = Stats.mean(X, n);
+    let meanY = Stats.mean(Y, n);
+
+    let sumX = Stats.sum(X, n);
+    let sumY = Stats.sum(Y, n);
+
+    let XY = Stats.arrayMult(X, Y, n);
+    let sumXY = Stats.sum(XY, n);
+
+    let X2 = Stats.arrayMult(X, X, n);
+    let sumX2 = Stats.sum(X2, n);
+
+    let sum2X = sumX * sumX;
+
+    let b1 = Float.new();
+    do b1.setInt((n * sumXY) - (sumX * sumY));
+    do b1.divInt((n * sumX2) - sum2X);
+
+    let b1meanX = Float.new();
+    do b1meanX.set(b1);
+    do b1meanX.mult(meanX);
+
+    let b0 = Float.new();
+    do b0.set(meanY);
+    do b0.sub(b1meanX);
+
+    do Output.printString("b0 = ");
+    do b0.print(4);
+    do Output.println();
+    do Output.printString("b1 = ");
+    do b1.print(4);
+    do Output.println();
+
+    let result = Array.new(2);
+    let result[0] = b0;
+    let result[1] = b1;
+
+    return result;
+  }
+}

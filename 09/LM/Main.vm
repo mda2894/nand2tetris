@@ -1,0 +1,30 @@
+function Main.main 4
+call Float.init 0
+pop temp 0
+call Stats.getData 0
+pop local 0
+push constant 0
+push local 0
+add
+pop pointer 1
+push that 0
+pop local 1
+push constant 1
+push local 0
+add
+pop pointer 1
+push that 0
+pop local 2
+push constant 2
+push local 0
+add
+pop pointer 1
+push that 0
+pop local 3
+push local 1
+push local 2
+push local 3
+call Stats.lm 3
+pop temp 0
+push constant 0
+return

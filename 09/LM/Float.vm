@@ -1,0 +1,2656 @@
+function Float.init 2
+push constant 32767
+neg
+push constant 1
+sub
+pop static 0
+push constant 511
+pop static 1
+push constant 512
+neg
+pop static 2
+push constant 0
+push constant 0
+push static 2
+call Float._newConst 3
+pop static 3
+push constant 32767
+push constant 1
+neg
+push static 1
+call Float._newConst 3
+pop static 4
+push static 0
+push constant 1
+push static 1
+call Float._newConst 3
+pop static 5
+call Float.new 0
+pop static 6
+call Float.new 0
+pop static 7
+call Float.new 0
+pop static 8
+call Float.new 0
+pop static 9
+call Float.new 0
+pop static 10
+call Float.new 0
+pop static 11
+call Float.new 0
+pop static 12
+call Float.new 0
+pop static 13
+push constant 31
+call Array.new 1
+pop static 14
+push constant 31
+call Array.new 1
+pop static 15
+push constant 1
+pop local 1
+label WHILE_EXP0
+push local 0
+push constant 16
+lt
+not
+if-goto WHILE_END0
+push local 0
+push static 15
+add
+push local 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push local 1
+add
+push constant 1
+add
+pop local 1
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 1
+pop local 1
+label WHILE_EXP1
+push local 0
+push constant 31
+lt
+not
+if-goto WHILE_END1
+push local 0
+push static 15
+add
+push constant 1
+neg
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 0
+push static 14
+add
+push local 1
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 1
+push local 1
+add
+push constant 1
+add
+pop local 1
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP1
+label WHILE_END1
+call Float._io_init 0
+pop temp 0
+push constant 0
+return
+function Float.maxExp 0
+push static 1
+return
+function Float.minExp 0
+push static 2
+return
+function Float.posInf 0
+push static 4
+return
+function Float.negInf 0
+push static 5
+return
+function Float.new 0
+push constant 3
+call Memory.alloc 1
+pop pointer 0
+push constant 0
+pop this 0
+push constant 0
+pop this 1
+push static 2
+pop this 2
+push pointer 0
+return
+function Float.newFloat 0
+push constant 3
+call Memory.alloc 1
+pop pointer 0
+push pointer 0
+push argument 0
+call Float.set 2
+pop temp 0
+push pointer 0
+return
+function Float._newConst 0
+push constant 3
+call Memory.alloc 1
+pop pointer 0
+push pointer 0
+push argument 0
+push argument 1
+push argument 2
+call Float._setConst 4
+pop temp 0
+push pointer 0
+return
+function Float.dispose 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Float._msw 0
+push argument 0
+pop pointer 0
+push this 0
+return
+function Float._lsw 0
+push argument 0
+pop pointer 0
+push this 1
+return
+function Float._exp 0
+push argument 0
+pop pointer 0
+push this 2
+return
+function Float.set 0
+push argument 0
+pop pointer 0
+push pointer 0
+push argument 1
+call Float._msw 1
+push argument 1
+call Float._lsw 1
+push argument 1
+call Float._exp 1
+call Float._setConst 4
+return
+function Float.setInt 0
+push argument 0
+pop pointer 0
+push pointer 0
+push argument 1
+push constant 0
+lt
+push argument 1
+push constant 30
+call Float._setConst 4
+pop temp 0
+push pointer 0
+call Float._normalize 1
+return
+function Float._setConst 0
+push argument 0
+pop pointer 0
+push argument 1
+pop this 0
+push argument 2
+pop this 1
+push argument 3
+pop this 2
+push pointer 0
+return
+function Float._normalize 0
+push argument 0
+pop pointer 0
+push this 0
+push constant 16384
+neg
+eq
+push this 1
+push constant 0
+eq
+and
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push pointer 0
+return
+label IF_FALSE0
+push pointer 0
+call Float.isZero 1
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push static 2
+pop this 2
+goto IF_END1
+label IF_FALSE1
+label WHILE_EXP0
+push pointer 0
+call Float.isNeg 1
+push pointer 0
+call Float._mant_bit30 1
+and
+push pointer 0
+call Float.isNeg 1
+not
+push pointer 0
+call Float._mant_bit30 1
+not
+and
+or
+not
+if-goto WHILE_END0
+push this 2
+push static 2
+gt
+not
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push pointer 0
+push static 3
+call Float.set 2
+pop temp 0
+push pointer 0
+return
+goto IF_END2
+label IF_FALSE2
+push pointer 0
+call Float._mant_SHL1 1
+pop temp 0
+push this 2
+push constant 1
+sub
+pop this 2
+label IF_END2
+goto WHILE_EXP0
+label WHILE_END0
+push pointer 0
+call Float._mant_isMaxNeg 1
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push this 2
+push static 1
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push pointer 0
+push static 5
+call Float.set 2
+pop temp 0
+goto IF_END4
+label IF_FALSE4
+push pointer 0
+push constant 16384
+neg
+push constant 0
+push this 2
+push constant 1
+add
+call Float._setConst 4
+pop temp 0
+label IF_END4
+label IF_FALSE3
+label IF_END1
+push this 2
+push static 2
+lt
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push pointer 0
+push static 3
+call Float.set 2
+pop temp 0
+goto IF_END5
+label IF_FALSE5
+push this 2
+push static 1
+gt
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push pointer 0
+call Float.isNeg 1
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push pointer 0
+push static 5
+call Float.set 2
+pop temp 0
+goto IF_END7
+label IF_FALSE7
+push pointer 0
+push static 4
+call Float.set 2
+pop temp 0
+label IF_END7
+label IF_FALSE6
+label IF_END5
+push pointer 0
+return
+function Float._denormalize 1
+push argument 0
+pop pointer 0
+push argument 1
+push this 2
+gt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push pointer 0
+push argument 1
+push this 2
+sub
+call Float._mant_SRA 2
+pop local 0
+push argument 1
+pop this 2
+label IF_FALSE0
+push local 0
+return
+function Float.neg 0
+push argument 0
+pop pointer 0
+push this 0
+not
+pop this 0
+push this 1
+not
+push constant 1
+add
+pop this 1
+push this 1
+push constant 0
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 0
+push constant 1
+add
+pop this 0
+label IF_FALSE0
+push pointer 0
+return
+function Float.add 2
+push argument 0
+pop pointer 0
+push pointer 0
+push argument 1
+call Float._exp 1
+call Float._denormalize 2
+pop local 1
+push static 7
+push argument 1
+call Float.set 2
+pop temp 0
+push local 1
+push static 7
+push this 2
+call Float._denormalize 2
+or
+pop local 1
+push pointer 0
+call Float.isNeg 1
+pop local 0
+push local 0
+push argument 1
+call Float.isNeg 1
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push pointer 0
+push static 7
+call Float._mant_add 2
+pop temp 0
+push pointer 0
+push local 1
+call Float._mant_addInt 2
+pop temp 0
+push local 0
+push pointer 0
+call Float.isNeg 1
+eq
+not
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push pointer 0
+call Float._mant_SHR1 1
+pop temp 0
+push local 0
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push this 0
+push static 0
+or
+pop this 0
+label IF_FALSE2
+push this 2
+push static 1
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push local 0
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push pointer 0
+push static 5
+call Float.set 2
+pop temp 0
+goto IF_END4
+label IF_FALSE4
+push pointer 0
+push static 4
+call Float.set 2
+pop temp 0
+label IF_END4
+goto IF_END3
+label IF_FALSE3
+push this 2
+push constant 1
+add
+pop this 2
+label IF_END3
+label IF_FALSE1
+goto IF_END0
+label IF_FALSE0
+push pointer 0
+push static 7
+call Float._mant_add 2
+pop temp 0
+push pointer 0
+push local 1
+call Float._mant_addInt 2
+pop temp 0
+label IF_END0
+push pointer 0
+call Float._normalize 1
+return
+function Float.addInt 0
+push argument 0
+pop pointer 0
+push static 7
+push argument 1
+call Float.setInt 2
+pop temp 0
+push pointer 0
+push static 7
+call Float.add 2
+return
+function Float.sub 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Float.neg 1
+pop temp 0
+push pointer 0
+push argument 1
+call Float.add 2
+pop temp 0
+push pointer 0
+call Float.neg 1
+return
+function Float.subInt 0
+push argument 0
+pop pointer 0
+push static 7
+push argument 1
+call Float.setInt 2
+pop temp 0
+push pointer 0
+push static 7
+call Float.sub 2
+return
+function Float.compare 0
+push argument 0
+pop pointer 0
+push static 8
+push pointer 0
+call Float.set 2
+pop temp 0
+push static 8
+push argument 1
+call Float.sub 2
+pop temp 0
+push static 8
+call Float.isZero 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push static 8
+call Float.isNeg 1
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 1
+neg
+return
+label IF_FALSE1
+push constant 1
+return
+function Float.compareInt 0
+push argument 0
+pop pointer 0
+push static 8
+push pointer 0
+call Float.set 2
+pop temp 0
+push static 8
+push argument 1
+call Float.subInt 2
+pop temp 0
+push static 8
+call Float.isZero 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push static 8
+call Float.isNeg 1
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 1
+neg
+return
+label IF_FALSE1
+push constant 1
+return
+function Float.isZero 0
+push argument 0
+pop pointer 0
+push this 0
+push constant 0
+eq
+push this 1
+push constant 0
+eq
+and
+return
+function Float.isNeg 0
+push argument 0
+pop pointer 0
+push this 0
+push constant 0
+lt
+return
+function Float.isPos 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Float.isZero 1
+not
+push pointer 0
+call Float.isNeg 1
+not
+and
+return
+function Float.mult 1
+push argument 0
+pop pointer 0
+push static 7
+push argument 1
+call Float.set 2
+pop temp 0
+push pointer 0
+call Float.isNeg 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+not
+pop local 0
+push pointer 0
+call Float.neg 1
+pop temp 0
+label IF_FALSE0
+push static 7
+call Float.isNeg 1
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push local 0
+not
+pop local 0
+push static 7
+call Float.neg 1
+pop temp 0
+label IF_FALSE1
+push this 2
+push static 7
+call Float._exp 1
+add
+push constant 1
+add
+pop this 2
+push pointer 0
+push static 7
+call Float._mant_longUmult 2
+pop temp 0
+push pointer 0
+call Float._mant_SHL1 1
+pop temp 0
+push pointer 0
+push static 7
+call Float._mant_SHL1 1
+call Float._mant_addInt 2
+pop temp 0
+push pointer 0
+call Float._mant_bit30 1
+not
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push pointer 0
+call Float._mant_SHL1 1
+pop temp 0
+push pointer 0
+push static 7
+call Float._mant_SHL1 1
+call Float._mant_addInt 2
+pop temp 0
+push this 2
+push constant 1
+sub
+pop this 2
+label IF_FALSE2
+push static 7
+call Float.isNeg 1
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push pointer 0
+push constant 1
+call Float._mant_addInt 2
+pop temp 0
+push pointer 0
+call Float.isNeg 1
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push pointer 0
+push constant 16384
+push constant 0
+push this 2
+push constant 1
+add
+call Float._setConst 4
+pop temp 0
+label IF_FALSE4
+label IF_FALSE3
+push local 0
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push pointer 0
+call Float.neg 1
+pop temp 0
+label IF_FALSE5
+push pointer 0
+call Float._normalize 1
+return
+function Float.multInt 0
+push argument 0
+pop pointer 0
+push static 7
+push argument 1
+call Float.setInt 2
+pop temp 0
+push pointer 0
+push static 7
+call Float.mult 2
+return
+function Float.div 2
+push argument 0
+pop pointer 0
+push argument 1
+call Float.isZero 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 3
+call Sys.error 1
+pop temp 0
+label IF_FALSE0
+push static 7
+push argument 1
+call Float.set 2
+pop temp 0
+push pointer 0
+call Float.isNeg 1
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+not
+pop local 0
+push pointer 0
+call Float.neg 1
+pop temp 0
+label IF_FALSE1
+push static 7
+call Float.isNeg 1
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push local 0
+not
+pop local 0
+push static 7
+call Float.neg 1
+pop temp 0
+label IF_FALSE2
+push pointer 0
+push static 7
+call Float._mant_ucompare 2
+push constant 0
+lt
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push pointer 0
+call Float._mant_SHL1 1
+pop temp 0
+push this 2
+push constant 1
+sub
+pop this 2
+label IF_FALSE3
+push static 6
+push constant 0
+call Float._mant_setInt 2
+pop temp 0
+label WHILE_EXP0
+push local 1
+push constant 31
+lt
+not
+if-goto WHILE_END0
+push static 6
+call Float._mant_SHL1 1
+pop temp 0
+push pointer 0
+push static 7
+call Float._mant_ucompare 2
+push constant 0
+lt
+not
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push pointer 0
+push static 7
+call Float._mant_sub 2
+pop temp 0
+push static 6
+push constant 1
+call Float._mant_addInt 2
+pop temp 0
+label IF_FALSE4
+push pointer 0
+call Float._mant_SHL1 1
+pop temp 0
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push pointer 0
+push static 7
+call Float._mant_ucompare 2
+push constant 0
+lt
+not
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push static 6
+push constant 1
+call Float._mant_addInt 2
+pop temp 0
+push static 6
+call Float.isNeg 1
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push pointer 0
+push constant 16384
+push constant 0
+push this 2
+push constant 1
+add
+call Float._setConst 4
+pop temp 0
+label IF_FALSE6
+label IF_FALSE5
+push pointer 0
+push static 6
+call Float._msw 1
+push static 6
+call Float._lsw 1
+push this 2
+push static 7
+call Float._exp 1
+sub
+call Float._setConst 4
+pop temp 0
+push local 0
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push pointer 0
+call Float.neg 1
+pop temp 0
+label IF_FALSE7
+push pointer 0
+call Float._normalize 1
+return
+function Float.divInt 0
+push argument 0
+pop pointer 0
+push static 7
+push argument 1
+call Float.setInt 2
+pop temp 0
+push pointer 0
+push static 7
+call Float.div 2
+return
+function Float.sqrt 1
+push argument 0
+pop pointer 0
+push pointer 0
+call Float.isNeg 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 4
+call Sys.error 1
+pop temp 0
+label IF_FALSE0
+push pointer 0
+call Float.isZero 1
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push pointer 0
+return
+label IF_FALSE1
+push static 9
+push pointer 0
+call Float.set 2
+pop temp 0
+push this 2
+push constant 2
+call Math.divide 2
+pop this 2
+label WHILE_EXP0
+push local 0
+push constant 6
+lt
+not
+if-goto WHILE_END0
+push static 10
+push static 9
+call Float.set 2
+pop temp 0
+push static 10
+push pointer 0
+call Float.div 2
+pop temp 0
+push static 10
+push pointer 0
+call Float.add 2
+pop temp 0
+push pointer 0
+push static 10
+call Float.set 2
+pop temp 0
+push this 2
+push constant 1
+sub
+pop this 2
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push pointer 0
+return
+function Float._mant_set 0
+push argument 0
+pop pointer 0
+push argument 1
+call Float._msw 1
+pop this 0
+push argument 1
+call Float._lsw 1
+pop this 1
+push pointer 0
+return
+function Float._mant_setInt 0
+push argument 0
+pop pointer 0
+push argument 1
+push constant 0
+lt
+pop this 0
+push argument 1
+pop this 1
+push pointer 0
+return
+function Float._mant_isMaxNeg 0
+push argument 0
+pop pointer 0
+push this 0
+push static 0
+eq
+push this 1
+push constant 0
+eq
+and
+return
+function Float._mant_bit30 0
+push argument 0
+pop pointer 0
+push this 0
+push constant 16384
+and
+push constant 16384
+eq
+return
+function Float._mant_SHL1 1
+push argument 0
+pop pointer 0
+push this 0
+push constant 0
+lt
+push constant 1
+and
+pop local 0
+push this 0
+push this 0
+add
+pop this 0
+push this 1
+push constant 0
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 0
+push constant 1
+add
+pop this 0
+label IF_FALSE0
+push this 1
+push this 1
+add
+pop this 1
+push local 0
+return
+function Float._mant_SHR1 0
+push argument 0
+pop pointer 0
+push this 1
+push constant 1
+not
+and
+pop this 1
+push pointer 0
+push constant 31
+call Float._mant_ROL 2
+pop temp 0
+push constant 0
+return
+function Float._mant_SRA 3
+push argument 0
+pop pointer 0
+push argument 1
+push constant 0
+gt
+not
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push argument 1
+push constant 31
+gt
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push pointer 0
+call Float.isNeg 1
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push pointer 0
+push constant 1
+neg
+call Float._mant_setInt 2
+pop temp 0
+goto IF_END2
+label IF_FALSE2
+push pointer 0
+push constant 0
+call Float._mant_setInt 2
+pop temp 0
+label IF_END2
+push this 0
+push constant 1
+and
+return
+label IF_FALSE1
+push argument 1
+push constant 17
+lt
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push argument 1
+push constant 1
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push this 1
+push constant 1
+and
+pop local 2
+goto IF_END4
+label IF_FALSE4
+push this 1
+push argument 1
+push constant 2
+sub
+push static 15
+add
+pop pointer 1
+push that 0
+push constant 1
+add
+and
+pop local 2
+label IF_END4
+goto IF_END3
+label IF_FALSE3
+push argument 1
+push constant 17
+eq
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push this 0
+push constant 1
+and
+pop local 2
+goto IF_END5
+label IF_FALSE5
+push this 0
+push argument 1
+push constant 2
+sub
+push static 14
+add
+pop pointer 1
+push that 0
+push constant 1
+add
+and
+pop local 2
+label IF_END5
+label IF_END3
+push local 2
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push constant 1
+pop local 2
+label IF_FALSE6
+push argument 1
+push constant 1
+sub
+push static 14
+add
+pop pointer 1
+push that 0
+pop local 0
+push argument 1
+push constant 1
+sub
+push static 15
+add
+pop pointer 1
+push that 0
+pop local 1
+push this 0
+push constant 0
+lt
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push this 0
+push local 0
+or
+pop this 0
+push this 1
+push local 1
+or
+pop this 1
+goto IF_END7
+label IF_FALSE7
+push this 0
+push local 0
+not
+and
+pop this 0
+push this 1
+push local 1
+not
+and
+pop this 1
+label IF_END7
+push pointer 0
+push constant 32
+push argument 1
+sub
+call Float._mant_ROL 2
+pop temp 0
+push local 2
+return
+function Float._mant_ROL 2
+push argument 0
+pop pointer 0
+push argument 1
+push constant 0
+gt
+not
+push argument 1
+push constant 31
+gt
+or
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push argument 1
+push constant 15
+gt
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push this 0
+pop local 0
+push this 1
+pop this 0
+push local 0
+pop this 1
+push argument 1
+push constant 16
+sub
+pop argument 1
+label IF_FALSE1
+label WHILE_EXP0
+push argument 1
+push constant 0
+gt
+not
+if-goto WHILE_END0
+push this 0
+push constant 0
+lt
+push constant 1
+and
+pop local 1
+push this 0
+push this 0
+add
+pop this 0
+push this 1
+push constant 0
+lt
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push this 0
+push constant 1
+add
+pop this 0
+label IF_FALSE2
+push this 1
+push this 1
+add
+push local 1
+add
+pop this 1
+push argument 1
+push constant 1
+sub
+pop argument 1
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function Float._mant_add 1
+push argument 0
+pop pointer 0
+push this 0
+push argument 1
+call Float._msw 1
+call Float._addWillCarry 2
+pop local 0
+push this 0
+push argument 1
+call Float._msw 1
+add
+pop this 0
+push this 1
+push argument 1
+call Float._lsw 1
+call Float._addWillCarry 2
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 0
+push constant 1
+add
+pop this 0
+push local 0
+push this 0
+push constant 0
+eq
+or
+pop local 0
+label IF_FALSE0
+push this 1
+push argument 1
+call Float._lsw 1
+add
+pop this 1
+push local 0
+push constant 1
+and
+return
+function Float._mant_addInt 0
+push argument 0
+pop pointer 0
+push static 11
+push argument 1
+call Float._mant_setInt 2
+pop temp 0
+push pointer 0
+push static 11
+call Float._mant_add 2
+return
+function Float._mant_sub 0
+push argument 0
+pop pointer 0
+push static 11
+push argument 1
+call Float._mant_set 2
+pop temp 0
+push pointer 0
+push static 11
+call Float.neg 1
+call Float._mant_add 2
+pop temp 0
+push constant 0
+return
+function Float._addWillCarry 0
+push argument 0
+push argument 1
+and
+push static 0
+and
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+not
+return
+label IF_FALSE0
+push argument 0
+not
+push argument 1
+not
+and
+push static 0
+and
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+return
+label IF_FALSE1
+push argument 0
+push constant 32767
+and
+push argument 1
+push constant 32767
+and
+add
+push constant 0
+lt
+return
+function Float._mant_ucompare 1
+push argument 0
+pop pointer 0
+push this 0
+push argument 1
+call Float._msw 1
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 1
+push argument 1
+call Float._lsw 1
+call Float._subWillBorrow 2
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 1
+neg
+pop local 0
+goto IF_END1
+label IF_FALSE1
+push this 1
+push argument 1
+call Float._lsw 1
+eq
+not
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push constant 1
+pop local 0
+label IF_FALSE2
+label IF_END1
+goto IF_END0
+label IF_FALSE0
+push this 0
+push argument 1
+call Float._msw 1
+call Float._subWillBorrow 2
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 1
+neg
+pop local 0
+goto IF_END3
+label IF_FALSE3
+push constant 1
+pop local 0
+label IF_END3
+label IF_END0
+push local 0
+return
+function Float._subWillBorrow 0
+push argument 0
+push static 0
+and
+push argument 1
+push static 0
+and
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push argument 1
+push argument 0
+gt
+return
+label IF_FALSE0
+push argument 1
+push constant 0
+lt
+return
+function Float._mant_longUmult 2
+push argument 0
+pop pointer 0
+push static 12
+push constant 0
+call Float._mant_setInt 2
+pop temp 0
+push static 13
+push constant 0
+call Float._mant_setInt 2
+pop temp 0
+label WHILE_EXP0
+push local 0
+push constant 31
+lt
+not
+if-goto WHILE_END0
+push static 13
+call Float._mant_SHL1 1
+pop local 1
+push static 12
+call Float._mant_SHL1 1
+pop temp 0
+push static 12
+push local 1
+call Float._mant_addInt 2
+pop temp 0
+push this 0
+push constant 16384
+and
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push static 13
+push argument 1
+call Float._mant_add 2
+pop local 1
+push static 12
+push local 1
+call Float._mant_addInt 2
+pop temp 0
+label IF_FALSE0
+push pointer 0
+call Float._mant_SHL1 1
+pop temp 0
+push local 0
+push constant 1
+add
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push pointer 0
+push static 12
+call Float._mant_set 2
+pop temp 0
+push argument 1
+push static 13
+call Float._mant_set 2
+pop temp 0
+push constant 0
+return
+function Float._io_init 0
+call Float.new 0
+pop static 22
+call Float.new 0
+pop static 23
+call Float.new 0
+pop static 24
+push constant 19728
+push constant 19778
+push constant 2
+neg
+call Float._newConst 3
+pop static 17
+push constant 8
+pop static 18
+push static 18
+call Array.new 1
+pop static 19
+push constant 0
+push static 19
+add
+push constant 20480
+push constant 0
+push constant 3
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 1
+push static 19
+add
+push constant 25600
+push constant 0
+push constant 6
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 2
+push static 19
+add
+push constant 20000
+push constant 0
+push constant 13
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 3
+push static 19
+add
+push constant 24414
+push constant 4096
+push constant 26
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 4
+push static 19
+add
+push constant 18189
+push constant 6944
+neg
+push constant 53
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 5
+push static 19
+add
+push constant 20194
+push constant 10539
+neg
+push constant 106
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 6
+push static 19
+add
+push constant 24892
+push constant 4004
+push constant 212
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 7
+push static 19
+add
+push constant 18909
+push constant 9188
+push constant 425
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push static 18
+call Array.new 1
+pop static 20
+push constant 0
+push static 20
+add
+push constant 26214
+push constant 26214
+push constant 4
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 1
+push static 20
+add
+push constant 20971
+push constant 31457
+neg
+push constant 7
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 2
+push static 20
+add
+push constant 26843
+push constant 29779
+neg
+push constant 14
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 3
+push static 20
+add
+push constant 21990
+push constant 15240
+push constant 27
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 4
+push static 20
+add
+push constant 29514
+push constant 13728
+neg
+push constant 54
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 5
+push static 20
+add
+push constant 26584
+push constant 28841
+neg
+push constant 107
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 6
+push static 20
+add
+push constant 21567
+push constant 2796
+neg
+push constant 213
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 7
+push static 20
+add
+push constant 28392
+push constant 9022
+push constant 426
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 10
+call Array.new 1
+pop static 21
+push constant 0
+push static 21
+add
+push constant 16384
+push constant 0
+push constant 1
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 1
+push static 21
+add
+push constant 26214
+push constant 26214
+push constant 5
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 2
+push static 21
+add
+push constant 20971
+push constant 31457
+neg
+push constant 8
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 3
+push static 21
+add
+push constant 16777
+push constant 14155
+push constant 11
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 4
+push static 21
+add
+push constant 26843
+push constant 29779
+neg
+push constant 15
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 5
+push static 21
+add
+push constant 21474
+push constant 10716
+neg
+push constant 18
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 6
+push static 21
+add
+push constant 17179
+push constant 8573
+neg
+push constant 21
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 7
+push static 21
+add
+push constant 27487
+push constant 13717
+neg
+push constant 25
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 8
+push static 21
+add
+push constant 21990
+push constant 15240
+push constant 28
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 9
+push static 21
+add
+push constant 17592
+push constant 12192
+push constant 31
+neg
+call Float._newConst 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push constant 0
+return
+function Float.print 1
+push argument 0
+pop pointer 0
+push pointer 0
+push argument 1
+call Float.toString 2
+pop local 0
+push local 0
+call Output.printString 1
+pop temp 0
+push local 0
+call String.dispose 1
+pop temp 0
+push constant 0
+return
+function Float.toString 6
+push argument 0
+pop pointer 0
+push pointer 0
+push static 4
+call Float.compare 2
+push constant 0
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 5
+call String.new 1
+push constant 43
+call String.appendChar 2
+push constant 105
+call String.appendChar 2
+push constant 110
+call String.appendChar 2
+push constant 102
+call String.appendChar 2
+push constant 46
+call String.appendChar 2
+return
+label IF_FALSE0
+push pointer 0
+push static 5
+call Float.compare 2
+push constant 0
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 5
+call String.new 1
+push constant 45
+call String.appendChar 2
+push constant 105
+call String.appendChar 2
+push constant 110
+call String.appendChar 2
+push constant 102
+call String.appendChar 2
+push constant 46
+call String.appendChar 2
+return
+label IF_FALSE1
+push pointer 0
+call Float.newFloat 1
+pop local 1
+call Float.new 0
+pop local 2
+push argument 1
+push constant 10
+add
+call String.new 1
+pop local 0
+push local 1
+call Float.isNeg 1
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push local 1
+call Float.neg 1
+pop temp 0
+push local 0
+push constant 45
+call String.appendChar 2
+pop temp 0
+label IF_FALSE2
+push argument 1
+push constant 1
+lt
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 1
+pop argument 1
+label IF_FALSE3
+push argument 1
+push constant 10
+gt
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push constant 10
+pop argument 1
+label IF_FALSE4
+push local 2
+push local 1
+call Float._exp 1
+call Float.setInt 2
+pop temp 0
+push local 2
+push static 17
+call Float.mult 2
+pop temp 0
+push local 2
+call Float._floor 1
+pop local 3
+push local 2
+push local 3
+neg
+call Float._setPow10 2
+pop temp 0
+push local 1
+push local 2
+call Float.mult 2
+pop temp 0
+push local 1
+push constant 10
+call Float.compareInt 2
+push constant 0
+lt
+not
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push local 1
+push constant 0
+push static 20
+add
+pop pointer 1
+push that 0
+call Float.mult 2
+pop temp 0
+push local 3
+push constant 1
+add
+pop local 3
+goto IF_END5
+label IF_FALSE5
+push local 1
+push constant 1
+call Float.compareInt 2
+push constant 0
+lt
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push local 1
+push constant 0
+push static 19
+add
+pop pointer 1
+push that 0
+call Float.mult 2
+pop temp 0
+push local 3
+push constant 1
+sub
+pop local 3
+label IF_FALSE6
+label IF_END5
+push local 1
+push argument 1
+push constant 1
+sub
+push static 21
+add
+pop pointer 1
+push that 0
+call Float.add 2
+pop temp 0
+push local 1
+push constant 10
+call Float.compareInt 2
+push constant 0
+lt
+not
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push local 1
+push constant 0
+push static 20
+add
+pop pointer 1
+push that 0
+call Float.mult 2
+pop temp 0
+push local 3
+push constant 1
+add
+pop local 3
+label IF_FALSE7
+label WHILE_EXP0
+push local 4
+push argument 1
+lt
+not
+if-goto WHILE_END0
+push local 1
+call Float._floor 1
+pop local 5
+push local 2
+push local 5
+call Float.setInt 2
+pop temp 0
+push local 1
+push local 2
+call Float.sub 2
+pop temp 0
+push local 0
+push local 5
+push constant 48
+add
+call String.appendChar 2
+pop temp 0
+push local 4
+push constant 0
+eq
+if-goto IF_TRUE8
+goto IF_FALSE8
+label IF_TRUE8
+push local 0
+push constant 46
+call String.appendChar 2
+pop temp 0
+label IF_FALSE8
+push local 1
+push constant 0
+push static 19
+add
+pop pointer 1
+push that 0
+call Float.mult 2
+pop temp 0
+push local 4
+push constant 1
+add
+pop local 4
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+push constant 101
+call String.appendChar 2
+pop temp 0
+push pointer 0
+call Float.isZero 1
+if-goto IF_TRUE9
+goto IF_FALSE9
+label IF_TRUE9
+push constant 0
+pop local 3
+label IF_FALSE9
+push local 3
+push constant 0
+lt
+if-goto IF_TRUE10
+goto IF_FALSE10
+label IF_TRUE10
+push local 3
+neg
+pop local 3
+push local 0
+push constant 45
+call String.appendChar 2
+pop temp 0
+goto IF_END10
+label IF_FALSE10
+push local 0
+push constant 43
+call String.appendChar 2
+pop temp 0
+label IF_END10
+push local 3
+push constant 100
+call Math.divide 2
+pop local 5
+push local 3
+push local 5
+push constant 100
+call Math.multiply 2
+sub
+pop local 3
+push local 0
+push local 5
+push constant 48
+add
+call String.appendChar 2
+pop temp 0
+push local 3
+push constant 10
+call Math.divide 2
+pop local 5
+push local 0
+push local 5
+push constant 48
+add
+call String.appendChar 2
+pop temp 0
+push local 3
+push local 5
+push constant 10
+call Math.multiply 2
+sub
+pop local 5
+push local 0
+push local 5
+push constant 48
+add
+call String.appendChar 2
+pop temp 0
+push local 2
+call Float.dispose 1
+pop temp 0
+push local 1
+call Float.dispose 1
+pop temp 0
+push local 0
+return
+function Float.setString 8
+push argument 0
+pop pointer 0
+push static 23
+push constant 1
+call Float.setInt 2
+pop temp 0
+push pointer 0
+push constant 0
+call Float.setInt 2
+pop temp 0
+push argument 1
+call String.length 1
+pop local 4
+push local 4
+push constant 0
+gt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push argument 1
+push local 3
+call String.charAt 2
+pop local 5
+label WHILE_EXP0
+push local 3
+push local 4
+lt
+push local 6
+not
+and
+not
+if-goto WHILE_END0
+push local 5
+push constant 45
+eq
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+not
+pop local 0
+goto IF_END1
+label IF_FALSE1
+push local 5
+push constant 43
+eq
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+goto IF_END2
+label IF_FALSE2
+push local 5
+push constant 46
+eq
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push constant 0
+not
+pop local 7
+goto IF_END3
+label IF_FALSE3
+push local 5
+push constant 32
+or
+push constant 101
+eq
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push constant 0
+not
+pop local 6
+goto IF_END4
+label IF_FALSE4
+push local 5
+push constant 47
+gt
+push local 5
+push constant 58
+lt
+and
+if-goto IF_TRUE5
+goto IF_FALSE5
+label IF_TRUE5
+push local 7
+if-goto IF_TRUE6
+goto IF_FALSE6
+label IF_TRUE6
+push static 23
+push constant 10
+call Float.divInt 2
+pop temp 0
+push static 24
+push local 5
+push constant 48
+sub
+call Float.setInt 2
+pop temp 0
+push static 24
+push static 23
+call Float.mult 2
+pop temp 0
+push pointer 0
+push static 24
+call Float.add 2
+pop temp 0
+goto IF_END6
+label IF_FALSE6
+push pointer 0
+push constant 10
+call Float.multInt 2
+pop temp 0
+push pointer 0
+push local 5
+push constant 48
+sub
+call Float.addInt 2
+pop temp 0
+label IF_END6
+goto IF_END5
+label IF_FALSE5
+push local 0
+if-goto IF_TRUE7
+goto IF_FALSE7
+label IF_TRUE7
+push pointer 0
+call Float.neg 1
+pop temp 0
+label IF_FALSE7
+push pointer 0
+return
+label IF_END5
+label IF_END4
+label IF_END3
+label IF_END2
+label IF_END1
+push local 3
+push constant 1
+add
+pop local 3
+push local 3
+push local 4
+lt
+if-goto IF_TRUE8
+goto IF_FALSE8
+label IF_TRUE8
+push argument 1
+push local 3
+call String.charAt 2
+pop local 5
+label IF_FALSE8
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+if-goto IF_TRUE9
+goto IF_FALSE9
+label IF_TRUE9
+push pointer 0
+call Float.neg 1
+pop temp 0
+label IF_FALSE9
+push constant 0
+pop local 6
+label WHILE_EXP1
+push local 3
+push local 4
+lt
+push local 6
+not
+and
+not
+if-goto WHILE_END1
+push local 5
+push constant 45
+eq
+if-goto IF_TRUE10
+goto IF_FALSE10
+label IF_TRUE10
+push constant 0
+not
+pop local 1
+goto IF_END10
+label IF_FALSE10
+push local 5
+push constant 43
+eq
+if-goto IF_TRUE11
+goto IF_FALSE11
+label IF_TRUE11
+goto IF_END11
+label IF_FALSE11
+push local 5
+push constant 47
+gt
+push local 5
+push constant 58
+lt
+and
+if-goto IF_TRUE12
+goto IF_FALSE12
+label IF_TRUE12
+push local 2
+push constant 10
+call Math.multiply 2
+push local 5
+push constant 48
+sub
+add
+pop local 2
+goto IF_END12
+label IF_FALSE12
+push constant 0
+not
+pop local 6
+label IF_END12
+label IF_END11
+label IF_END10
+push local 3
+push constant 1
+add
+pop local 3
+push local 3
+push local 4
+lt
+if-goto IF_TRUE13
+goto IF_FALSE13
+label IF_TRUE13
+push argument 1
+push local 3
+call String.charAt 2
+pop local 5
+label IF_FALSE13
+goto WHILE_EXP1
+label WHILE_END1
+push local 1
+if-goto IF_TRUE14
+goto IF_FALSE14
+label IF_TRUE14
+push local 2
+neg
+pop local 2
+label IF_FALSE14
+push local 2
+push constant 160
+neg
+lt
+if-goto IF_TRUE15
+goto IF_FALSE15
+label IF_TRUE15
+push constant 160
+neg
+pop local 2
+label IF_FALSE15
+push local 2
+push constant 160
+gt
+if-goto IF_TRUE16
+goto IF_FALSE16
+label IF_TRUE16
+push constant 160
+pop local 2
+label IF_FALSE16
+push static 23
+push local 2
+call Float._setPow10 2
+pop temp 0
+push pointer 0
+push static 23
+call Float.mult 2
+pop temp 0
+label IF_FALSE0
+push pointer 0
+return
+function Float._setPow10 3
+push argument 0
+pop pointer 0
+push argument 1
+push constant 0
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push argument 1
+neg
+pop argument 1
+push static 20
+pop local 0
+goto IF_END0
+label IF_FALSE0
+push static 19
+pop local 0
+label IF_END0
+push pointer 0
+push constant 1
+call Float.setInt 2
+pop temp 0
+push constant 1
+pop local 2
+label WHILE_EXP0
+push local 1
+push static 18
+lt
+not
+if-goto WHILE_END0
+push argument 1
+push local 2
+and
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push pointer 0
+push local 1
+push local 0
+add
+pop pointer 1
+push that 0
+call Float.mult 2
+pop temp 0
+label IF_FALSE1
+push local 2
+push local 2
+add
+pop local 2
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push pointer 0
+return
+function Float._floor 1
+push argument 0
+pop pointer 0
+push static 22
+push pointer 0
+call Float.set 2
+pop temp 0
+push static 22
+push constant 30
+call Float._denormalize 2
+pop temp 0
+push static 22
+call Float._lsw 1
+pop local 0
+push local 0
+return
+function Float._dump 0
+push argument 0
+pop pointer 0
+push this 0
+call Float._dumpInt 1
+pop temp 0
+push this 1
+call Float._dumpInt 1
+pop temp 0
+push constant 94
+call Output.printChar 1
+pop temp 0
+push this 2
+call Float._dumpInt 1
+pop temp 0
+push constant 32
+call Output.printChar 1
+pop temp 0
+push constant 0
+return
+function Float._dumpInt 1
+push argument 0
+push constant 0
+lt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 8
+pop local 0
+push argument 0
+push constant 32767
+and
+pop argument 0
+label IF_FALSE0
+push local 0
+push constant 48
+add
+push argument 0
+push constant 4096
+call Math.divide 2
+push constant 15
+and
+add
+pop local 0
+push local 0
+push constant 57
+gt
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push local 0
+push constant 7
+add
+pop local 0
+label IF_FALSE1
+push local 0
+call Output.printChar 1
+pop temp 0
+push constant 48
+push argument 0
+push constant 256
+call Math.divide 2
+push constant 15
+and
+add
+pop local 0
+push local 0
+push constant 57
+gt
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push local 0
+push constant 7
+add
+pop local 0
+label IF_FALSE2
+push local 0
+call Output.printChar 1
+pop temp 0
+push constant 48
+push argument 0
+push constant 16
+call Math.divide 2
+push constant 15
+and
+add
+pop local 0
+push local 0
+push constant 57
+gt
+if-goto IF_TRUE3
+goto IF_FALSE3
+label IF_TRUE3
+push local 0
+push constant 7
+add
+pop local 0
+label IF_FALSE3
+push local 0
+call Output.printChar 1
+pop temp 0
+push constant 48
+push argument 0
+push constant 15
+and
+add
+pop local 0
+push local 0
+push constant 57
+gt
+if-goto IF_TRUE4
+goto IF_FALSE4
+label IF_TRUE4
+push local 0
+push constant 7
+add
+pop local 0
+label IF_FALSE4
+push local 0
+call Output.printChar 1
+pop temp 0
+push constant 0
+return

@@ -1,0 +1,19 @@
+class Main {
+
+  function void main() {
+    var Array dat, X, Y;
+    var int n;
+
+    do Float.init();
+
+    let dat = Stats.getData();
+
+    let X = dat[0];
+    let Y = dat[1];
+    let n = dat[2];
+
+    do Stats.lm(X, Y, n);
+
+    return;
+  }
+}
