@@ -55,6 +55,12 @@ class CodeWriter:
         asm = asm.replace("label", self.functionName + "$" + arg1)
         self.out.append(asm)
 
+    def writeFunction(self, arg1, arg2):
+
+    def writeCall(self, arg1, arg2):
+
+    def writeReturn(self):
+
     def writeTwoArgCalc(self, arg):
         cmd = self.code.arithmeticTable.get(arg)
         asm = [cmd if x == "cmd" else x for x in self.code.twoArgCalc]
