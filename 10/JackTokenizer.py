@@ -14,3 +14,5 @@ class JackTokenizer:
     def tokenize(self):
         for line in self.lines:
             for char in line:
+                pass
+    
